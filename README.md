@@ -1,12 +1,12 @@
 
-# Project Simple CRUD API
+# API Inventaris Lab PTIPD
 
-ini adalah repositori tentang CRUD API dengan menggunakan :
+API ini menggunakan :
 
 
  - Node.js
  - Express.js
- - dotenv
- - Body Parser
  - MySQL 
+ - Nodemailer
+
 
