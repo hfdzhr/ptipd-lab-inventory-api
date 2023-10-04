@@ -119,6 +119,10 @@ const loginDataUser = async (req, res) => {
   }
 };
 
+// const deleteDataUser = asyns (req, res) => {
+//   const id_user = req.params.id
+// }
+
 function sendVerificationEmail(email, token) {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -135,7 +139,7 @@ function sendVerificationEmail(email, token) {
     from: 'hafidgamers11@gmail.com',
     to: email,
     subject: 'Verifikasi Email',
-    text: `Klik tautan berikut untuk verifikasi email Anda: https://ptipd-api.vercel.app/users/verify/${token}`,
+    text: `Klik tautan berikut untuk verifikasi email Anda: http://localhost:3000/users/verify/${token}`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
