@@ -135,7 +135,7 @@ function sendVerificationEmail(email, token) {
     from: 'hafidgamers11@gmail.com',
     to: email,
     subject: 'Verifikasi Email',
-    text: `Klik tautan berikut untuk verifikasi email Anda: http://localhost:3000/users/verify/${token}`,
+    text: `Klik tautan berikut untuk verifikasi email Anda: https://ptipd-api.vercel.app/users/verify/${token}`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {

@@ -5,7 +5,10 @@ const routerUsers = require('./users');
 router.use('/users', routerUsers);
 
 router.get('/', (req, res) => {
-  res.send('Express JS');
+  res.status(200).json({
+    status: 200,
+    message: 'Selamat Datang Di API Lab Inventaris PTIPD'
+  })
 });
 
 module.exports = router;
