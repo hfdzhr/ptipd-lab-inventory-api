@@ -119,11 +119,8 @@ const loginDataUser = async (req, res) => {
   }
 };
 
-// const deleteDataUser = asyns (req, res) => {
-//   const id_user = req.params.id
-// }
 
-function sendVerificationEmail(email, token) {
+async (req, res) => {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     host: 'smtp.gmail.com',
@@ -135,6 +132,19 @@ function sendVerificationEmail(email, token) {
     },
   });
 
+  await new Promise((resolve, reject) => {
+    // verify connection configuration
+    transporter.verify(function (error, success) {
+      if (error) {
+        console.log(error);
+        reject(error);
+      } else {
+        console.log('Server is ready to take our messages');
+        resolve(success);
+      }
+    });
+  });
+
   const mailOptions = {
     from: 'hafidgamers11@gmail.com',
     to: email,
@@ -142,14 +152,22 @@ function sendVerificationEmail(email, token) {
     text: `Klik tautan berikut untuk verifikasi email Anda: http://localhost:3000/users/verify/${token}`,
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error('Gagal mengirim email verifikasi: ' + error.message);
-    } else {
-      console.log('Email verifikasi berhasil dikirim: ' + info.response);
-    }
+  await new Promise((resolve, reject) => {
+    // send mail
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        console.error(err);
+        reject(err);
+      } else {
+        console.log(info);
+        resolve(info);
+      }
+    });
   });
-}
+
+  res.status(200).json({ status: 'OK' });
+};
+
 
 // Melakukan penggantian sudah verifikasi atau belum
 const VerifyUser = async (req, res) => {
