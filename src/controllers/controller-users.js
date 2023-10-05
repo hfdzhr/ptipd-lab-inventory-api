@@ -97,16 +97,14 @@ const loginDataUser = async (req, res) => {
     if (user) {
       const token = generateJWTToken(user.id);
 
-      res
-        .status(200)
-        .json({
-          status: 200,
-          profile: [
-            { name: user.name, email: user.email, instansi: user.instansi },
-          ],
-          message: 'Selamat Login Berhasil',
-          token,
-        });
+      res.status(200).json({
+        status: 200,
+        profile: [
+          { name: user.name, email: user.email, instansi: user.instansi },
+        ],
+        message: 'Selamat Login Berhasil',
+        token,
+      });
     } else {
       res.status(401).json({
         status: 401,
@@ -119,54 +117,48 @@ const loginDataUser = async (req, res) => {
   }
 };
 
+// const deleteDataUser = asyns (req, res) => {
+//   const id_user = req.params.id
+// }
 
-async (req, res) => {
+
+const delay = 10000; // 10 detik
+
+const middleware = (mail, callback) => {
+  setTimeout(() => {
+    callback(null, mail);
+  }, delay);
+};
+
+function sendVerificationEmail(email, token) {
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    host: 'smtp.gmail.com',
+    service: "gmail",
+    host: "smtp.gmail.com",
     port: 465,
     secure: true,
     auth: {
-      user: 'hafidgamers11@gmail.com',
-      pass: 'rkjsojywcznfusos',
+      user: process.env.EMAIL_TRANSPORT,
+      pass: process.env.PASSWORD_TRANSPORT,
     },
   });
 
-  await new Promise((resolve, reject) => {
-    // verify connection configuration
-    transporter.verify(function (error, success) {
-      if (error) {
-        console.log(error);
-        reject(error);
-      } else {
-        console.log('Server is ready to take our messages');
-        resolve(success);
-      }
-    });
-  });
+  transporter.use(middleware);
 
   const mailOptions = {
-    from: 'hafidgamers11@gmail.com',
+    from: process.env.EMAIL_TRANSPORT,
     to: email,
-    subject: 'Verifikasi Email',
+    subject: "Verifikasi Email",
     text: `Klik tautan berikut untuk verifikasi email Anda: http://localhost:3000/users/verify/${token}`,
   };
 
-  await new Promise((resolve, reject) => {
-    // send mail
-    transporter.sendMail(mailOptions, (err, info) => {
-      if (err) {
-        console.error(err);
-        reject(err);
-      } else {
-        console.log(info);
-        resolve(info);
-      }
-    });
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error("Gagal mengirim email verifikasi: " + error.message);
+    } else {
+      console.log("Email verifikasi berhasil dikirim: " + info.response);
+    }
   });
-
-  res.status(200).json({ status: 'OK' });
-};
+}
 
 
 // Melakukan penggantian sudah verifikasi atau belum
