@@ -27,13 +27,31 @@ const registerDataUser = async (req, res) => {
         function (error, rows) {
           if (error) {
             console.error('Gagal mendaftar : ' + error.message);
-            res.status(500).json({ status: 500, message: 'Gagal mendaftar' });
+            res.status(500).json({
+              code: 500,
+              status: 'INTERNAL_SERVER_ERROR',
+              errors: [
+                'Gagal Mendafatar',
+                'Terjadi kesalan pada server',
+                'Server sedang maintenance',
+                'Server sedang penuh, mohon tunggu sebentar',
+              ],
+            });
           } else {
             if (rows.length > 0) {
               // Email sudah terdaftar, kirimkan respons yang sesuai
-              res
-                .status(400)
-                .json({ status: 400, message: 'Email sudah terdaftar' });
+              res.status(400).json({
+                code: 400,
+                status: 'BAD_REQUEST',
+                errors: {
+                  email: [
+                    'Email sudah terdaftar',
+                    'Email yang didaftar sudah tersedia',
+                    'Ganti alamat email anda',
+                    'Periksa kembali alamat email anda',
+                  ],
+                },
+              });
             } else {
               // Email belum terdaftar, lanjutkan dengan pendaftaran
               connection.query(
@@ -48,9 +66,12 @@ const registerDataUser = async (req, res) => {
                   } else {
                     sendVerificationEmail(data.email, verificationToken);
                     res.status(200).json({
-                      status: 200,
-                      message:
-                        'Registrasi berhasil silahkan cek email Anda untuk verifikasi',
+                      code: 200,
+                      status: 'OK',
+                      data: {
+                        message:
+                          'Registrasi berhasil silahkan cek email Anda untuk verifikasi',
+                      },
                     });
                   }
                 }
@@ -98,29 +119,56 @@ const loginDataUser = async (req, res) => {
       const token = generateJWTToken(user.id);
 
       res.status(200).json({
-        status: 200,
-        profile: [
-          { name: user.name, email: user.email, instansi: user.instansi },
-        ],
-        message: 'Selamat Login Berhasil',
-        token,
+        code: 200,
+        status: 'OK',
+        data: {
+          profile: {
+            name: user.name,
+            email: user.email,
+            instansi: user.instansi,
+          },
+          message: 'Selamat Login Berhasil',
+          token,
+        },
       });
     } else {
       res.status(401).json({
-        status: 401,
-        message: 'Login gagal silah periksa email dan password anda kembali',
+        code: 401,
+        status: 'UNAUTHORIZED',
+        errors: {
+          email: [
+            'Silahkan masukan email dengan benar',
+            'Pastikan email telah terdaftar',
+            'Periksa kembali email',
+            'Silahkan register jika belum mempunyai akun',
+            'Perhatikan huruf besar dan juga kecil',
+          ],
+          password: [
+            'Silahkan masukan password dengan benar',
+            'Periksa kembali password',
+            'Silahkan register jika belum mempunyai akun',
+            'Perhatikan huruf besar dan juga kecil',
+          ],
+        },
       });
     }
   } catch (error) {
     console.error(`Gagal Login: ${error.message}`);
-    res.status(500).json({ status: 500, message: 'Gagal Login' });
+    res.status(500).json({
+      code: 500,
+      status: 'INTERNAL_SERVER_ERROR',
+      errors: [
+        'Terjadi kesalan pada server',
+        'Server sedang maintenance',
+        'Server sedang penuh, mohon tunggu sebentar',
+      ],
+    });
   }
 };
 
 // const deleteDataUser = asyns (req, res) => {
 //   const id_user = req.params.id
 // }
-
 
 const delay = 10000; // 10 detik
 
@@ -132,8 +180,8 @@ const middleware = (mail, callback) => {
 
 function sendVerificationEmail(email, token) {
   const transporter = nodemailer.createTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
+    service: 'gmail',
+    host: 'smtp.gmail.com',
     port: 465,
     secure: true,
     auth: {
@@ -147,19 +195,18 @@ function sendVerificationEmail(email, token) {
   const mailOptions = {
     from: process.env.EMAIL_TRANSPORT,
     to: email,
-    subject: "Verifikasi Email",
+    subject: 'Verifikasi Email',
     text: `Klik tautan berikut untuk verifikasi email Anda: http://localhost:3000/users/verify/${token}`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
-      console.error("Gagal mengirim email verifikasi: " + error.message);
+      console.error('Gagal mengirim email verifikasi: ' + error.message);
     } else {
-      console.log("Email verifikasi berhasil dikirim: " + info.response);
+      console.log('Email verifikasi berhasil dikirim: ' + info.response);
     }
   });
 }
-
 
 // Melakukan penggantian sudah verifikasi atau belum
 const VerifyUser = async (req, res) => {

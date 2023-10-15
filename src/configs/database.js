@@ -5,4 +5,3 @@ module.exports = {
   password: process.env.DATABASE_PASS,
   database: process.env.DATABASE_NAME,
 };
-  
