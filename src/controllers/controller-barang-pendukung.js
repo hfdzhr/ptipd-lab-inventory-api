@@ -32,6 +32,39 @@ const getDataBarangPendukung = async (req, res) => {
   }
 };
 
+const getSingleDataBarangPendukung = async (req, res) => {
+  const id = req.params.id;
+  const data = await new Promise((resolve, reject) => {
+    connection.query(
+      'SELECT * FROM barang_pendukung WHERE id = ?;',
+      [id],
+      function (error, rows) {
+        if (rows) {
+          resolve(rows);
+        } else {
+          reject([]);
+        }
+      }
+    );
+  });
+
+  if (data) {
+    res.send({
+      code: 200,
+      status: 'OK',
+      data: data[0],
+    });
+  } else {
+    res.send({
+      code: 400,
+      status: 'BAD_REQUEST',
+      error: {
+        id: ['Silahkan cek kembali id produk'],
+      },
+    });
+  }
+};
+
 // Menambahkan data produk
 const addDataBarangPendukung = async (req, res) => {
   let dataBarangPendukung = {
@@ -166,6 +199,7 @@ const deleteDataBarangPendukung = async (req, res) => {
 
 module.exports = {
   getDataBarangPendukung,
+  getSingleDataBarangPendukung,
   addDataBarangPendukung,
   editDataBarangPendukung,
   deleteDataBarangPendukung,

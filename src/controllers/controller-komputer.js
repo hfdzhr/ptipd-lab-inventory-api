@@ -32,6 +32,39 @@ const getDataKomputer = async (req, res) => {
   }
 };
 
+const getSingleDataKomputer = async (req, res) => {
+  const id = req.params.id;
+  const data = await new Promise((resolve, reject) => {
+    connection.query(
+      'SELECT * FROM komputer WHERE id = ?;',
+      [id],
+      function (error, rows) {
+        if (rows) {
+          resolve(rows);
+        } else {
+          reject([]);
+        }
+      }
+    );
+  });
+
+  if (data) {
+    res.send({
+      code: 200,
+      status: 'OK',
+      data: data[0],
+    });
+  } else {
+    res.send({
+      code: 400,
+      status: 'BAD_REQUEST',
+      error: {
+        id: ['Silahkan cek kembali id komputer'],
+      },
+    });
+  }
+};
+
 // Menambahkan data produk
 const addDataKomputer = async (req, res) => {
   let spekKomputer = {
@@ -250,6 +283,7 @@ const deleteDataKomputer = async (req, res) => {
 
 module.exports = {
   getDataKomputer,
+  getSingleDataKomputer,
   addDataKomputer,
   editDataKomputer,
   deleteDataKomputer,

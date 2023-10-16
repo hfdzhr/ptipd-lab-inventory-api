@@ -3,6 +3,8 @@ const { ruangan } = require('../controllers');
 
 router.get('/', ruangan.getDataRuangan); // Path untuk melihat
 
+router.get('/:id', ruangan.getSingleDataRuangan); // Path untuk melihat
+
 router.post('/', ruangan.addDataRuangan); // Path untuk menambah data
 
 router.put('/:id', ruangan.editDataRuangan) // Path untuk edit data

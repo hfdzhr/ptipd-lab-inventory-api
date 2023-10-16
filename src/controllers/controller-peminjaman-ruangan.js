@@ -32,6 +32,39 @@ const getDataPeminjamanRuangan = async (req, res) => {
   }
 };
 
+const getSingleDataPeminjamanRuangan = async (req, res) => {
+  const id = req.params.id;
+  const data = await new Promise((resolve, reject) => {
+    connection.query(
+      'SELECT * FROM peminjaman_ruangan WHERE id = ?;',
+      [id],
+      function (error, rows) {
+        if (rows) {
+          resolve(rows);
+        } else {
+          reject([]);
+        }
+      }
+    );
+  });
+
+  if (data) {
+    res.send({
+      code: 200,
+      status: 'OK',
+      data: data[0],
+    });
+  } else {
+    res.send({
+      code: 400,
+      status: 'BAD_REQUEST',
+      error: {
+        id: ['Silahkan cek kembali id'],
+      },
+    });
+  }
+};
+
 // Menambahkan data produk
 const addDataPeminjamanRuangan = async (req, res) => {
   let dataPeminjamanRuangan = {
@@ -203,6 +236,7 @@ const deleteDataPeminjamanRuangan = async (req, res) => {
 
 module.exports = {
   getDataPeminjamanRuangan,
+  getSingleDataPeminjamanRuangan,
   addDataPeminjamanRuangan,
   editDataPeminjamanRuangan,
   deleteDataPeminjamanRuangan,

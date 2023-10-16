@@ -29,6 +29,39 @@ const getDataRuangan = async (req, res) => {
   }
 };
 
+const getSingleDataRuangan = async (req, res) => {
+  const id = req.params.id;
+  const data = await new Promise((resolve, reject) => {
+    connection.query(
+      'SELECT * FROM ruangan WHERE id = ?;',
+      [id],
+      function (error, rows) {
+        if (rows) {
+          resolve(rows);
+        } else {
+          reject([]);
+        }
+      }
+    );
+  });
+
+  if (data) {
+    res.send({
+      code: 200,
+      status: 'OK',
+      data: data[0],
+    });
+  } else {
+    res.send({
+      code: 400,
+      status: 'BAD_REQUEST',
+      error: {
+        id: ['Silahkan cek kembali id'],
+      },
+    });
+  }
+};
+
 // Menambahkan data produk
 const addDataRuangan = async (req, res) => {
   let dataRuangan = {
@@ -189,6 +222,7 @@ const deleteDataRuangan = async (req, res) => {
 
 module.exports = {
   getDataRuangan,
+  getSingleDataRuangan,
   addDataRuangan,
   editDataRuangan,
   deleteDataRuangan,

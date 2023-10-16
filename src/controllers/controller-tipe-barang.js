@@ -29,6 +29,39 @@ const getDataTipeBarang = async (req, res) => {
   }
 };
 
+const getSingleDataTipeBarang = async (req, res) => {
+  const id = req.params.id;
+  const data = await new Promise((resolve, reject) => {
+    connection.query(
+      'SELECT * FROM tipe_barang WHERE id = ?;',
+      [id],
+      function (error, rows) {
+        if (rows) {
+          resolve(rows);
+        } else {
+          reject([]);
+        }
+      }
+    );
+  });
+
+  if (data) {
+    res.send({
+      code: 200,
+      status: 'OK',
+      data: data[0],
+    });
+  } else {
+    res.send({
+      code: 400,
+      status: 'BAD_REQUEST',
+      error: {
+        id: ['Silahkan cek kembali id produk'],
+      },
+    });
+  }
+};
+
 // Menambahkan data produk
 const addDataTipeBarang = async (req, res) => {
   let dataTipeBarang = {
@@ -162,6 +195,7 @@ const deleteDataTipeBarang = async (req, res) => {
 
 module.exports = {
   getDataTipeBarang,
+  getSingleDataTipeBarang,
   addDataTipeBarang,
   editDataTipeBarang,
   deleteDataTipeBarang,
