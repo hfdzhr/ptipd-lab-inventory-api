@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const cors = require('cors')
 const routerUsers = require('./users');
 const routerRuangan = require('./ruangan');
 const routerPeminjamanRuangan = require('./peminjaman-ruangan');
@@ -8,6 +9,8 @@ const routerKomputer = require('./komputer');
 const routerBarangPendukung = require('./barang-pendukung.js')
 
 // PATH untuk data users
+router.use(cors())
+
 router.use('/users', routerUsers);
 
 router.use('/ruangan', routerRuangan);
