@@ -5,17 +5,23 @@ connection.connect();
 
 // Menampilkan semua data
 const getDataKomputer = async (req, res) => {
+  const filterQuery = req.query.tipe;
+
   const data = await new Promise((resolve, reject) => {
-    connection.query(
-      'SELECT komputer.id, merk.nama_merk, tipe_barang.tipe_barang, komputer.spek_komputer, komputer.kondisi, ruangan.nama_ruangan, komputer.urutan_meja FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id',
-      function (error, rows) {
-        if (rows) {
-          resolve(rows);
-        } else {
-          reject([]);
-        }
+    let getKomputerQuery =
+      'SELECT komputer.id, merk.nama_merk, tipe_barang.tipe_barang, komputer.spek_komputer, komputer.kondisi, ruangan.nama_ruangan, komputer.urutan_meja FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id ';
+
+    if (filterQuery) {
+      getKomputerQuery += 'WHERE tipe_barang = ?';
+    }
+
+    connection.query(getKomputerQuery, [filterQuery], function (error, rows) {
+      if (rows) {
+        resolve(rows);
+      } else {
+        reject([]);
       }
-    );
+    });
   });
 
   if (data) {
@@ -71,7 +77,7 @@ const addDataKomputer = async (req, res) => {
     processor: req.body.processor,
     ram: req.body.ram,
     storage: req.body.storage,
-  }
+  };
   let dataKomputer = {
     id_merk: req.body.id_merk,
     id_tipe: req.body.id_tipe,
@@ -156,7 +162,7 @@ const editDataKomputer = async (req, res) => {
     processor: req.body.processor,
     ram: req.body.ram,
     storage: req.body.storage,
-  }
+  };
   let dataKomputerEdit = {
     id_merk: req.body.id_merk,
     id_tipe: req.body.id_tipe,
