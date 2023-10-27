@@ -174,6 +174,8 @@ const addDataKomputer = async (req, res) => {
 
 // Mengubah data
 const editDataKomputer = async (req, res) => {
+  const id = req.params.id
+  
   try {
     let dataKomputerEdit = {
       id_merk: req.body.id_merk,
