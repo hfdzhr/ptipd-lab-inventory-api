@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const connection = mysql.createConnection(config);
 const util = require('util');
 const jwt = require('jsonwebtoken');
+const { log } = require('console');
 connection.connect();
 
 // Register data User Baru
@@ -14,12 +15,13 @@ const registerDataUser = async (req, res) => {
     is_verified: 0,
     instansi: req.body.instansi,
     name: req.body.name,
+    role: req.body.role,
   };
 
   const verificationToken = generateToken();
 
   try {
-    // Memeriksa apakah email sudah terdaftar
+    // Periksa Apakah Email sudah terdaftar atau belum di dalam database
     await new Promise((resolve, reject) => {
       connection.query(
         'SELECT * FROM users WHERE email = ?',
@@ -93,6 +95,8 @@ function generateJWTToken(userId) {
 
   const token = jwt.sign({ userId }, secretKey, { expiresIn });
 
+  console.log(token);
+
   return token;
 }
 
@@ -116,16 +120,18 @@ const loginDataUser = async (req, res) => {
     });
 
     if (user) {
-      const token = generateJWTToken(user.id);
+      const token = generateJWTToken(user.id_user);
 
       res.status(200).json({
         code: 200,
         status: 'OK',
         data: {
           profile: {
+            id: user.id_user,
             name: user.name,
             email: user.email,
             instansi: user.instansi,
+            role: user.role,
           },
           message: 'Selamat Login Berhasil',
           token,
@@ -169,8 +175,6 @@ const loginDataUser = async (req, res) => {
 // const deleteDataUser = asyns (req, res) => {
 //   const id_user = req.params.id
 // }
-
-const delay = 10000; // 10 detik
 
 const middleware = (mail, callback) => {
   setTimeout(() => {
@@ -234,8 +238,73 @@ function generateToken() {
   );
 }
 
+function checkRole(role) {
+  return (req, res, next) => {
+    const tokenHeader = req.headers.authorization;
+
+    if (!tokenHeader) {
+      // Token tidak ada dalam header
+      return res
+        .status(403)
+        .json({
+          code: 403,
+          status: 'FORBIDDEN',
+          error: 'Token tidak ditemukan.',
+        });
+    }
+
+    const tokenParts = tokenHeader.split(' ');
+
+    const token = tokenParts[1];
+
+    jwt.verify(token, '1234', (err, decoded) => {
+      console.log(token);
+      if (err) {
+        return res
+          .status(403)
+          .json({
+            code: 403,
+            status: 'FORBIDDEN',
+            error: 'Token tidak valid.',
+          });
+      }
+      const userId = decoded.userId;
+      console.log(userId);
+
+      // Query database untuk mendapatkan peran pengguna
+      connection.query(
+        'SELECT role FROM users WHERE id_user = ?',
+        [userId],
+        (err, results) => {
+          if (err) {
+            return res
+              .status(500)
+              .json({
+                code: 500,
+                status: 'INTERNAL_SERVER_ERROR',
+                message: 'Terjadi kesalahan pada server.',
+              });
+          }
+          const userRole = results[0].role;
+
+          if (userRole === role) {
+            next();
+          } else {
+            return res.status(403).json({
+              code: 403,
+              status: 'FORBIDDEN',
+              message: 'Anda tidak memiliki izin untuk mengakses ini.',
+            });
+          }
+        }
+      );
+    });
+  };
+}
+
 module.exports = {
   registerDataUser,
   loginDataUser,
   VerifyUser,
+  checkRole,
 };
