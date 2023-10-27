@@ -9,7 +9,7 @@ const getDataKomputer = async (req, res) => {
 
   const data = await new Promise((resolve, reject) => {
     let getKomputerQuery =
-      'SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe_barang, tipe_barang.tipe_barang, komputer.processor, komputer.ram, komputer.storage , komputer.kondisi, ruangan.id AS id_ruangan  ,ruangan.nama_ruangan, komputer.urutan_meja FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id ';
+      'SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe, tipe_barang.tipe_barang, komputer.processor, komputer.ram, komputer.storage , komputer.kondisi, ruangan.id AS id_ruangan  ,ruangan.nama_ruangan, komputer.urutan_meja FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id ';
 
     if (filterQuery) {
       getKomputerQuery += 'WHERE tipe_barang = ?';
