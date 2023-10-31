@@ -1,11 +1,9 @@
 const config = require('../configs/database');
-const mysql = require('mysql');
 const nodemailer = require('nodemailer');
-const connection = mysql.createConnection(config);
 const util = require('util');
 const jwt = require('jsonwebtoken');
 const { log } = require('console');
-connection.connect();
+const db = require('../configs/db.config');
 
 // Register data User Baru
 const registerDataUser = async (req, res) => {
@@ -23,7 +21,7 @@ const registerDataUser = async (req, res) => {
   try {
     // Periksa Apakah Email sudah terdaftar atau belum di dalam database
     await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'SELECT * FROM users WHERE email = ?',
         data.email,
         function (error, rows) {
@@ -56,7 +54,7 @@ const registerDataUser = async (req, res) => {
               });
             } else {
               // Email belum terdaftar, lanjutkan dengan pendaftaran
-              connection.query(
+              db.query(
                 'INSERT INTO users SET ?',
                 { ...data, verification_token: verificationToken },
                 function (error, rows) {
@@ -91,11 +89,9 @@ const registerDataUser = async (req, res) => {
 
 function generateJWTToken(userId) {
   const secretKey = '1234';
-  const expiresIn = '1h';
+  const expiresIn = '3d';
 
   const token = jwt.sign({ userId }, secretKey, { expiresIn });
-
-  console.log(token);
 
   return token;
 }
@@ -106,7 +102,7 @@ const loginDataUser = async (req, res) => {
 
   try {
     const user = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'SELECT * FROM users WHERE email = ? AND password = ?;',
         [email, password],
         function (error, rows) {
@@ -121,7 +117,6 @@ const loginDataUser = async (req, res) => {
 
     if (user) {
       const token = generateJWTToken(user.id_user);
-
       res.status(200).json({
         code: 200,
         status: 'OK',
@@ -216,7 +211,7 @@ function sendVerificationEmail(email, token) {
 const VerifyUser = async (req, res) => {
   const token = req.params.token;
 
-  const query = util.promisify(connection.query).bind(connection);
+  const query = util.promisify(db.query).bind(connection);
 
   try {
     await query(
@@ -244,51 +239,49 @@ function checkRole(role) {
 
     if (!tokenHeader) {
       // Token tidak ada dalam header
-      return res
-        .status(403)
-        .json({
-          code: 403,
-          status: 'FORBIDDEN',
-          error: 'Token tidak ditemukan.',
-        });
+      return res.status(403).json({
+        code: 403,
+        status: 'FORBIDDEN',
+        error: 'Token tidak ditemukan.',
+      });
     }
 
     const tokenParts = tokenHeader.split(' ');
 
-    const token = tokenParts[1];
-
-    jwt.verify(token, '1234', (err, decoded) => {
-      console.log(token);
+    jwt.verify(tokenParts[1], '1234', (err, decoded) => {
       if (err) {
-        return res
-          .status(403)
-          .json({
-            code: 403,
-            status: 'FORBIDDEN',
-            error: 'Token tidak valid.',
-          });
+        return res.status(403).json({
+          code: 403,
+          status: 'FORBIDDEN',
+          error: 'Token tidak valid.',
+        });
       }
       const userId = decoded.userId;
-      console.log(userId);
 
       // Query database untuk mendapatkan peran pengguna
-      connection.query(
-        'SELECT role FROM users WHERE id_user = ?',
+      db.query(
+        'SELECT role, is_verified, email FROM users WHERE id_user = ?',
         [userId],
         (err, results) => {
           if (err) {
-            return res
-              .status(500)
-              .json({
-                code: 500,
-                status: 'INTERNAL_SERVER_ERROR',
-                message: 'Terjadi kesalahan pada server.',
-              });
+            return res.status(500).json({
+              code: 500,
+              status: 'INTERNAL_SERVER_ERROR',
+              message: 'Terjadi kesalahan pada server.',
+            });
           }
           const userRole = results[0].role;
+          const userIsVerifed = parseInt(results[0].is_verified);
+          const emailUser = results[0].email;
 
-          if (userRole === role) {
+          if (userRole === role && userIsVerifed === 1) {
             next();
+          } else if (userRole === role && userIsVerifed === 0) {
+            return res.status(403).json({
+              code: 403,
+              status: 'FORBIDDEN',
+              message: `Anda belum terverifikasi silahkan cek email ${emailUser} anda`,
+            });
           } else {
             return res.status(403).json({
               code: 403,

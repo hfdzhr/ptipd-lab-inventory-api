@@ -1,14 +1,11 @@
-const config = require('../configs/database');
-const mysql = require('mysql');
-const connection = mysql.createConnection(config);
-connection.connect();
+const db = require('../configs/db.config');
 
 // Menampilkan semua data
 const getDataBarangPendukung = async (req, res) => {
   try {
     const data = await new Promise((resolve, reject) => {
-      connection.query(
-        'SELECT barang_pendukung.id, barang_pendukung.nama_barang, tipe_barang.tipe_barang, merk.nama_merk, barang_pendukung.kondisi, barang_pendukung.keterangan FROM barang_pendukung JOIN tipe_barang ON id_tipe_barang = tipe_barang.id JOIN merk ON id_merk = merk.id',
+      db.query(
+        'SELECT barang_pendukung.id, barang_pendukung.nama_barang, tipe_barang.tipe_barang, merk.nama_merk, barang_pendukung.kondisi, barang_pendukung.keterangan, barang_pendukung.created_at, barang_pendukung.updated_at FROM barang_pendukung JOIN tipe_barang ON id_tipe_barang = tipe_barang.id JOIN merk ON id_merk = merk.id',
         function (error, rows) {
           if (error) {
             reject(error);
@@ -40,12 +37,13 @@ const getDataBarangPendukung = async (req, res) => {
   }
 };
 
+// Mengambil Single Data
 const getSingleDataBarangPendukung = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
-      connection.query(
-        'SELECT barang_pendukung.id, barang_pendukung.nama_barang, tipe_barang.tipe_barang, merk.nama_merk, barang_pendukung.kondisi, barang_pendukung.keterangan FROM barang_pendukung JOIN tipe_barang ON id_tipe_barang = tipe_barang.id JOIN merk ON id_merk = merk.id WHERE barang_pendukung.id = ?;',
+      db.query(
+        'SELECT barang_pendukung.id, barang_pendukung.nama_barang, tipe_barang.tipe_barang, merk.nama_merk, barang_pendukung.kondisi, barang_pendukung.keterangan, barang_pendukung.created_at, barang_pendukung.updated_at FROM barang_pendukung JOIN tipe_barang ON id_tipe_barang = tipe_barang.id JOIN merk ON id_merk = merk.id WHERE barang_pendukung.id = ?;',
         [id],
         function (error, rows) {
           if (error) {
@@ -87,19 +85,19 @@ const getSingleDataBarangPendukung = async (req, res) => {
   }
 };
 
-// Menambahkan data produk
+// Menambahkan data
 const addDataBarangPendukung = async (req, res) => {
   try {
     let dataBarangPendukung = {
       nama_barang: req.body.nama_barang,
-      id_tipe_barang: req.body.id_tipe_barang,
-      id_merk: req.body.id_merk,
+      id_tipe_barang: parseInt(req.body.id_tipe_barang),
+      id_merk: parseInt(req.body.id_merk),
       kondisi: req.body.kondisi,
       keterangan: req.body.keterangan,
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'INSERT INTO barang_pendukung SET ?;',
         [dataBarangPendukung],
         function (error, rows) {
@@ -137,17 +135,18 @@ const addDataBarangPendukung = async (req, res) => {
 // Mengubah data
 const editDataBarangPendukung = async (req, res) => {
   try {
-    id = req.params.id;
+    const id = parseInt(req.params.id);
+
     let dataBarangPendukungEdit = {
       nama_barang: req.body.nama_barang,
-      id_tipe_barang: req.body.id_tipe_barang,
-      id_merk: req.body.id_merk,
+      id_tipe_barang: parseInt(req.body.id_tipe_barang),
+      id_merk: parseInt(req.body.id_merk),
       kondisi: req.body.kondisi,
       keterangan: req.body.keterangan,
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'UPDATE barang_pendukung SET ? WHERE id = ?;',
         [dataBarangPendukungEdit, id],
         function (error, rows) {
@@ -192,13 +191,13 @@ const editDataBarangPendukung = async (req, res) => {
   }
 };
 
-// Delete Data Produk
+// Delete Data
 const deleteDataBarangPendukung = async (req, res) => {
   try {
-    let id = req.params.id;
+    const id = parseInt(req.params.id);
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'DELETE FROM barang_pendukung WHERE id = ?;',
         [id],
         function (error, rows) {

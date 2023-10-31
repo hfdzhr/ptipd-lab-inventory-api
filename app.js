@@ -1,12 +1,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
+let cookieParser = require('cookie-parser');
 // Definisi environtmen secara global (.env)
 require('dotenv').config();
 
 // Convert data ke JSON
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // Memanggil route karyawan
 const appRoute = require('./src/routers');

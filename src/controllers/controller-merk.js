@@ -1,13 +1,10 @@
-const config = require('../configs/database');
-const mysql = require('mysql');
-const connection = mysql.createConnection(config);
-connection.connect();
+const db = require('../configs/db.config');
 
 // Menampilkan semua data
 const getDataMerk = async (req, res) => {
   try {
     const data = await new Promise((resolve, reject) => {
-      connection.query('SELECT * FROM merk', function (error, rows) {
+      db.query('SELECT * FROM merk', function (error, rows) {
         if (error) {
           reject(error);
         } else {
@@ -39,9 +36,9 @@ const getDataMerk = async (req, res) => {
 
 const getSingleDataMerk = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'SELECT * FROM merk WHERE id = ?;',
         [id],
         function (error, rows) {
@@ -92,17 +89,13 @@ const addDataMerk = async (req, res) => {
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
-        'INSERT INTO merk SET ?;',
-        [dataMerk],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(true);
-          }
+      db.query('INSERT INTO merk SET ?;', [dataMerk], function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(true);
         }
-      );
+      });
     });
 
     if (result) {
@@ -137,13 +130,13 @@ const addDataMerk = async (req, res) => {
 // Mengubah data
 const editDataMerk = async (req, res) => {
   try {
-    id = req.params.id;
+    const id = parseInt(req.params.id);
     let dataMerk = {
       nama_merk: req.body.nama_merk,
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'UPDATE merk SET ? WHERE id = ?;',
         [dataMerk, id],
         function (error, rows) {
@@ -191,20 +184,16 @@ const editDataMerk = async (req, res) => {
 // Delete Data Produk
 const deleteDataMerk = async (req, res) => {
   try {
-    let id = req.params.id;
+    const id = parseInt(req.params.id);
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
-        'DELETE FROM merk WHERE id = ?;',
-        [id],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(true);
-          }
+      db.query('DELETE FROM merk WHERE id = ?;', [id], function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(true);
         }
-      );
+      });
     });
 
     if (result) {

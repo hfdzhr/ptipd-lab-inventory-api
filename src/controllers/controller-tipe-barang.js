@@ -1,13 +1,10 @@
-const config = require('../configs/database');
-const mysql = require('mysql');
-const connection = mysql.createConnection(config);
-connection.connect();
+const db = require('../configs/db.config');
 
 // Menampilkan semua data
 const getDataTipeBarang = async (req, res) => {
   try {
     const data = await new Promise((resolve, reject) => {
-      connection.query('SELECT * FROM tipe_barang', function (error, rows) {
+      db.query('SELECT * FROM tipe_barang', function (error, rows) {
         if (error) {
           reject(error);
         } else {
@@ -39,9 +36,9 @@ const getDataTipeBarang = async (req, res) => {
 
 const getSingleDataTipeBarang = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'SELECT * FROM tipe_barang WHERE id = ?;',
         [id],
         function (error, rows) {
@@ -92,7 +89,7 @@ const addDataTipeBarang = async (req, res) => {
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'INSERT INTO tipe_barang SET ?;',
         [dataTipeBarang],
         function (error, rows) {
@@ -137,13 +134,13 @@ const addDataTipeBarang = async (req, res) => {
 // Mengubah data
 const editDataTipeBarang = async (req, res) => {
   try {
-    id = req.params.id;
+    const id = parseInt(req.params.id);
     let dataTipeBarang = {
       tipe_barang: req.body.tipe_barang,
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'UPDATE tipe_barang SET ? WHERE id = ?;',
         [dataTipeBarang, id],
         function (error, rows) {
@@ -191,10 +188,10 @@ const editDataTipeBarang = async (req, res) => {
 // Delete Data Produk
 const deleteDataTipeBarang = async (req, res) => {
   try {
-    let id = req.params.id;
+    const id = parseInt(req.params.id);
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'DELETE FROM tipe_barang WHERE id = ?;',
         [id],
         function (error, rows) {

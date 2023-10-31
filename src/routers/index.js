@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const cors = require('cors')
+const cors = require('cors');
 const routerUsers = require('./users');
 const routerRuangan = require('./ruangan');
 const routerPeminjamanRuangan = require('./peminjaman-ruangan');
@@ -7,30 +7,34 @@ const routerMerk = require('./merk');
 const routerTipeBarang = require('./tipe-barang');
 const routerKomputer = require('./komputer');
 const routerBarangPendukung = require('./barang-pendukung.js');
-const routerDashboard = require('./dashboard')
-const routerPeminjamanBarang = require('./peminjaman-barang')
+const routerDashboard = require('./dashboard');
+const routerPeminjamanBarang = require('./peminjaman-barang');
 const { checkRole } = require('../controllers/controller-users');
 
 // PATH untuk data users
-router.use(cors())
+router.use(cors());
 
 router.use('/users', routerUsers);
 
-router.use('/ruangan' , routerRuangan);
+router.use('/ruangan', checkRole('admin'), routerRuangan);
 
-router.use('/peminjaman-ruangan', routerPeminjamanRuangan);
+router.use(
+  '/peminjaman-ruangan',
+  checkRole('admin'),
+  routerPeminjamanRuangan
+);
 
-router.use('/merk', routerMerk);
+router.use('/merk', checkRole('admin'), routerMerk);
 
-router.use('/tipe-barang', routerTipeBarang);
+router.use('/tipe-barang', checkRole('admin'), routerTipeBarang);
 
-router.use('/komputer', routerKomputer);
+router.use('/komputer', checkRole('admin'), routerKomputer);
 
-router.use('/barang-pendukung', routerBarangPendukung);
+router.use('/barang-pendukung', checkRole('admin'), routerBarangPendukung);
 
-router.use('/dashboard', routerDashboard);
+router.use('/dashboard',checkRole('admin'), routerDashboard);
 
-router.use('/peminjaman-barang', routerPeminjamanBarang)
+router.use('/peminjaman-barang', checkRole('admin'), routerPeminjamanBarang);
 
 router.get('/', (req, res) => {
   res.status(200).json({

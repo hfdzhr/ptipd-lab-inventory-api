@@ -1,13 +1,10 @@
-const config = require('../configs/database');
-const mysql = require('mysql');
-const connection = mysql.createConnection(config);
-connection.connect();
+const db = require('../configs/db.config');
 
 // Menampilkan semua data
 const getDataRuangan = async (req, res) => {
   try {
     const data = await new Promise((resolve, reject) => {
-      connection.query('SELECT * FROM ruangan', function (error, rows) {
+      db.query('SELECT * FROM ruangan', function (error, rows) {
         if (error) {
           reject(error);
         } else {
@@ -39,9 +36,9 @@ const getDataRuangan = async (req, res) => {
 
 const getSingleDataRuangan = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'SELECT * FROM ruangan WHERE id = ?;',
         [id],
         function (error, rows) {
@@ -89,12 +86,12 @@ const addDataRuangan = async (req, res) => {
   try {
     let dataRuangan = {
       nama_ruangan: req.body.nama_ruangan,
-      jumlah_komputer_laptop: req.body.jumlah_komputer_laptop,
+      jumlah_komputer_laptop: parseInt(req.body.jumlah_komputer_laptop),
       penanggung_jawab: req.body.penanggung_jawab,
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'INSERT INTO ruangan SET ?;',
         [dataRuangan],
         function (error, rows) {
@@ -150,7 +147,7 @@ const addDataRuangan = async (req, res) => {
 // Mengubah data
 const editDataRuangan = async (req, res) => {
   try {
-    let id = req.params.id;
+    const id = parseInt(req.params.id);
     let dataRuanganEdit = {
       nama_ruangan: req.body.nama_ruangan,
       jumlah_komputer_laptop: req.body.jumlah_komputer_laptop,
@@ -158,7 +155,7 @@ const editDataRuangan = async (req, res) => {
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'UPDATE ruangan SET ? WHERE id = ?;',
         [dataRuanganEdit, id],
         function (error, rows) {
@@ -217,10 +214,10 @@ const editDataRuangan = async (req, res) => {
 // Delete Data Produk
 const deleteDataRuangan = async (req, res) => {
   try {
-    let id = req.params.id;
+    const id = parseInt(req.params.id);
     const result = await new Promise((resolve, reject) => {
-      connection.query(
-        'DELETE FROM ruangan WHERE id = ?;',
+      db.query(
+        'DELETE FROM ruangan WHERE id = ?',
         [id],
         function (error, rows) {
           if (error) {

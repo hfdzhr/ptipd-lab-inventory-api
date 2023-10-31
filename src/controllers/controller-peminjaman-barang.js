@@ -1,15 +1,11 @@
-const { log } = require('util');
-const config = require('../configs/database');
-const mysql = require('mysql');
-const connection = mysql.createConnection(config);
-connection.connect();
+const db = require('../configs/db.config');
 
 // Menampilkan semua data
 const getDataPeminjamanBarang = async (req, res) => {
   try {
     const data = await new Promise((resolve, reject) => {
-      connection.query(
-        'SELECT peminjaman_barang.id, barang_pendukung.nama_barang, peminjaman_barang.tgl_peminjaman, peminjaman_barang.tgl_kembali, peminjaman_barang.status_peminjaman, peminjaman_barang.peminjam FROM peminjaman_barang JOIN barang_pendukung ON id_barang_pendukung = barang_pendukung.id;',
+      db.query(
+        'SELECT peminjaman_barang.id, barang_pendukung.nama_barang, peminjaman_barang.tgl_peminjaman, peminjaman_barang.tgl_kembali, peminjaman_barang.status_peminjaman, peminjaman_barang.peminjam, peminjaman_barang.created_at, peminjaman_barang.updated_at FROM peminjaman_barang JOIN barang_pendukung ON id_barang_pendukung = barang_pendukung.id;',
         function (error, rows) {
           if (error) {
             reject(error);
@@ -43,10 +39,10 @@ const getDataPeminjamanBarang = async (req, res) => {
 
 const getSingleDataPeminjamanBarang = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
-      connection.query(
-        'SELECT peminjaman_barang.id, barang_pendukung.nama_barang, peminjaman_barang.tgl_peminjaman, peminjaman_barang.tgl_kembali, peminjaman_barang.status_peminjaman, peminjaman_barang.peminjam FROM peminjaman_barang JOIN barang_pendukung ON id_barang_pendukung = barang_pendukung.id WHERE peminjaman_barang.id = ?;',
+      db.query(
+        'SELECT peminjaman_barang.id, barang_pendukung.nama_barang, peminjaman_barang.tgl_peminjaman, peminjaman_barang.tgl_kembali, peminjaman_barang.status_peminjaman, peminjaman_barang.peminjam, peminjaman_barang.created_at, peminjaman_barang.updated_at FROM peminjaman_barang JOIN barang_pendukung ON id_barang_pendukung = barang_pendukung.id WHERE peminjaman_barang.id = ?;',
         [id],
         function (error, rows) {
           if (error) {
@@ -92,7 +88,7 @@ const getSingleDataPeminjamanBarang = async (req, res) => {
 const addDataPeminjamanBarang = async (req, res) => {
   try {
     let dataPeminjamanBarang = {
-      id_barang_pendukung: req.body.id_barang_pendukung,
+      id_barang_pendukung: parseInt(req.body.id_barang_pendukung),
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
       status_peminjaman: req.body.status_peminjaman,
@@ -100,7 +96,7 @@ const addDataPeminjamanBarang = async (req, res) => {
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'INSERT INTO peminjaman_barang SET ?;',
         [dataPeminjamanBarang],
         function (error, rows) {
@@ -160,9 +156,9 @@ const addDataPeminjamanBarang = async (req, res) => {
 // Mengubah data
 const editDataPeminjamanBarang = async (req, res) => {
   try {
-    let id = req.params.id;
+    const id = parseInt(req.params.id);
     let editDataPeminjamanBarang = {
-      id_barang_pendukung: req.body.id_barang_pendukung,
+      id_barang_pendukung: parseInt(req.body.id_barang_pendukung),
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
       status_peminjaman: req.body.status_peminjaman,
@@ -170,7 +166,7 @@ const editDataPeminjamanBarang = async (req, res) => {
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'UPDATE peminjaman_barang SET ? WHERE id = ?;',
         [editDataPeminjamanBarang, id],
         function (error, rows) {
@@ -232,10 +228,10 @@ const editDataPeminjamanBarang = async (req, res) => {
 // Delete Data Produk
 const deleteDataPeminjamanBarang = async (req, res) => {
   try {
-    let id = req.params.id;
+    const id = parseInt(req.params.id);
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'DELETE FROM peminjaman_barang WHERE id = ?;',
         [id],
         function (error, rows) {

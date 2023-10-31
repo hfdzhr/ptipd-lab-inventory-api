@@ -1,14 +1,11 @@
-const config = require('../configs/database');
-const mysql = require('mysql');
-const connection = mysql.createConnection(config);
-connection.connect();
+const db = require('../configs/db.config');
 
 // Menampilkan semua data
 const getDataPeminjamanRuangan = async (req, res) => {
   try {
     const data = await new Promise((resolve, reject) => {
-      connection.query(
-        'SELECT peminjaman_ruangan.id, ruangan.nama_ruangan, peminjaman_ruangan.kegiatan, peminjaman_ruangan.tanggal_peminjaman, peminjaman_ruangan.tanggal_kembali, peminjaman_ruangan.status_peminjaman FROM peminjaman_ruangan JOIN ruangan ON id_ruangan=ruangan.id',
+      db.query(
+        'SELECT peminjaman_ruangan.id, ruangan.nama_ruangan, peminjaman_ruangan.kegiatan, peminjaman_ruangan.tanggal_peminjaman, peminjaman_ruangan.tanggal_kembali, peminjaman_ruangan.status_peminjaman, peminjaman_ruangan.created_at, peminjaman_ruangan.updated_at FROM peminjaman_ruangan JOIN ruangan ON id_ruangan=ruangan.id',
         function (error, rows) {
           if (error) {
             reject(error);
@@ -42,10 +39,10 @@ const getDataPeminjamanRuangan = async (req, res) => {
 
 const getSingleDataPeminjamanRuangan = async (req, res) => {
   try {
-    const id = req.params.id;
+    const id = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
-      connection.query(
-        'SELECT * FROM peminjaman_ruangan WHERE id = ?;',
+      db.query(
+        'SELECT peminjaman_ruangan.id, ruangan.nama_ruangan, peminjaman_ruangan.kegiatan, peminjaman_ruangan.tanggal_peminjaman, peminjaman_ruangan.tanggal_kembali, peminjaman_ruangan.status_peminjaman, peminjaman_ruangan.created_at, peminjaman_ruangan.updated_at WHERE id = ?;',
         [id],
         function (error, rows) {
           if (error) {
@@ -91,7 +88,7 @@ const getSingleDataPeminjamanRuangan = async (req, res) => {
 const addDataPeminjamanRuangan = async (req, res) => {
   try {
     let dataPeminjamanRuangan = {
-      id_ruangan: req.body.id_ruangan,
+      id_ruangan: parseInt(req.body.id_ruangan),
       kegiatan: req.body.kegiatan,
       tanggal_peminjaman: req.body.tanggal_peminjaman,
       tanggal_kembali: req.body.tanggal_kembali,
@@ -99,7 +96,7 @@ const addDataPeminjamanRuangan = async (req, res) => {
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'INSERT INTO peminjaman_ruangan SET ?;',
         [dataPeminjamanRuangan],
         function (error, rows) {
@@ -159,9 +156,9 @@ const addDataPeminjamanRuangan = async (req, res) => {
 // Mengubah data
 const editDataPeminjamanRuangan = async (req, res) => {
   try {
-    let id = req.params.id;
+    const id = parseInt(req.params.id);
     let dataPeminjamanRuanganEdit = {
-      id_ruangan: req.body.id_ruangan,
+      id_ruangan: parseInt(req.body.id_ruangan),
       kegiatan: req.body.kegiatan,
       tanggal_peminjaman: req.body.tanggal_peminjaman,
       tanggal_kembali: req.body.tanggal_kembali,
@@ -169,7 +166,7 @@ const editDataPeminjamanRuangan = async (req, res) => {
     };
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'UPDATE peminjaman_ruangan SET ? WHERE id = ?;',
         [dataPeminjamanRuanganEdit, id],
         function (error, rows) {
@@ -232,10 +229,10 @@ const editDataPeminjamanRuangan = async (req, res) => {
 // Delete Data Produk
 const deleteDataPeminjamanRuangan = async (req, res) => {
   try {
-    let id = req.params.id;
+    const id = parseInt(req.params.id);
 
     const result = await new Promise((resolve, reject) => {
-      connection.query(
+      db.query(
         'DELETE FROM peminjaman_ruangan WHERE id = ?;',
         [id],
         function (error, rows) {
