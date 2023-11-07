@@ -3,9 +3,40 @@ const db = require('../configs/db.config');
 // Menampilkan semua data
 const getDataPeminjamanRuangan = async (req, res) => {
   try {
-    const data = await new Promise((resolve, reject) => {
+    const tanggalPeminjaman = req.query.tglpeminjaman;
+    const page = parseInt(req.query.page) || 0;
+    const limit = parseInt(req.query.limit) || 10;
+
+    const totalRows = await new Promise((resolve, reject) => {
+      let queryCountPeminjamanRuangan =
+        'SELECT COUNT(*) FROM peminjaman_ruangan';
+
+      if (tanggalPeminjaman) {
+        queryCountPeminjamanRuangan += ' WHERE tanggal_peminjaman = ?';
+      }
+
       db.query(
-        'SELECT peminjaman_ruangan.id, ruangan.nama_ruangan, peminjaman_ruangan.kegiatan, peminjaman_ruangan.tanggal_peminjaman, peminjaman_ruangan.tanggal_kembali, peminjaman_ruangan.status_peminjaman, peminjaman_ruangan.created_at, peminjaman_ruangan.updated_at FROM peminjaman_ruangan JOIN ruangan ON id_ruangan=ruangan.id',
+        queryCountPeminjamanRuangan,
+        [tanggalPeminjaman],
+        function (error, rows) {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(rows[0]['COUNT(*)']);
+          }
+        }
+      );
+    });
+
+    const data = await new Promise((resolve, reject) => {
+      let queryPeminjamanRuangan = `SELECT peminjaman_ruangan.id, peminjaman_ruangan.nama_peminjam, peminjaman_ruangan.id_ruangan, ruangan.nama_ruangan, peminjaman_ruangan.kegiatan, peminjaman_ruangan.jenis_kegiatan, peminjaman_ruangan.instansi, peminjaman_ruangan.tanggal_peminjaman, peminjaman_ruangan.tanggal_kembali, peminjaman_ruangan.status_peminjaman, peminjaman_ruangan.created_at, peminjaman_ruangan.updated_at FROM peminjaman_ruangan JOIN ruangan ON id_ruangan = ruangan.id`;
+
+      if (tanggalPeminjaman) {
+        queryPeminjamanRuangan += ' WHERE tanggal_peminjaman = ?';
+      }
+      db.query(
+        queryPeminjamanRuangan,
+        [tanggalPeminjaman],
         function (error, rows) {
           if (error) {
             reject(error);
@@ -21,6 +52,7 @@ const getDataPeminjamanRuangan = async (req, res) => {
         code: 200,
         status: 'OK',
         data: data,
+        count: totalRows,
       });
     } else {
       res.status(400).send({
@@ -42,7 +74,7 @@ const getSingleDataPeminjamanRuangan = async (req, res) => {
     const id = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
       db.query(
-        'SELECT peminjaman_ruangan.id, ruangan.nama_ruangan, peminjaman_ruangan.kegiatan, peminjaman_ruangan.tanggal_peminjaman, peminjaman_ruangan.tanggal_kembali, peminjaman_ruangan.status_peminjaman, peminjaman_ruangan.created_at, peminjaman_ruangan.updated_at WHERE id = ?;',
+        'SELECT peminjaman_ruangan.id, peminjaman_ruangan.nama_peminjam, peminjaman_ruangan.id_ruangan, ruangan.nama_ruangan, peminjaman_ruangan.kegiatan, peminjaman_ruangan.jenis_kegiatan, peminjaman_ruangan.instansi, peminjaman_ruangan.tanggal_peminjaman, peminjaman_ruangan.tanggal_kembali, peminjaman_ruangan.status_peminjaman, peminjaman_ruangan.created_at, peminjaman_ruangan.updated_at FROM peminjaman_ruangan JOIN ruangan ON id_ruangan = ruangan.id WHERE peminjaman_ruangan.id = ?',
         [id],
         function (error, rows) {
           if (error) {
@@ -88,8 +120,11 @@ const getSingleDataPeminjamanRuangan = async (req, res) => {
 const addDataPeminjamanRuangan = async (req, res) => {
   try {
     let dataPeminjamanRuangan = {
+      nama_peminjam: req.body.nama_peminjam,
       id_ruangan: parseInt(req.body.id_ruangan),
       kegiatan: req.body.kegiatan,
+      instansi: req.body.instansi,
+      jenis_kegiatan: req.body.jenis_kegiatan,
       tanggal_peminjaman: req.body.tanggal_peminjaman,
       tanggal_kembali: req.body.tanggal_kembali,
       status_peminjaman: req.body.status_peminjaman,
@@ -158,8 +193,11 @@ const editDataPeminjamanRuangan = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     let dataPeminjamanRuanganEdit = {
+      nama_peminjam: req.body.nama_peminjam,
       id_ruangan: parseInt(req.body.id_ruangan),
       kegiatan: req.body.kegiatan,
+      instansi: req.body.instansi,
+      jenis_kegiatan: req.body.jenis_kegiatan,
       tanggal_peminjaman: req.body.tanggal_peminjaman,
       tanggal_kembali: req.body.tanggal_kembali,
       status_peminjaman: req.body.status_peminjaman,

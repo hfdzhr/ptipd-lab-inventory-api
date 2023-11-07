@@ -9,6 +9,8 @@ const routerKomputer = require('./komputer');
 const routerBarangPendukung = require('./barang-pendukung.js');
 const routerDashboard = require('./dashboard');
 const routerPeminjamanBarang = require('./peminjaman-barang');
+const routerJadwalMaintenance = require('./jadwal-maintenance');
+const routerPerbaikanKomputer = require('./perbaikan-komputer');
 const { checkRole } = require('../controllers/controller-users');
 
 // PATH untuk data users
@@ -35,6 +37,10 @@ router.use('/barang-pendukung', checkRole('admin'), routerBarangPendukung);
 router.use('/dashboard',checkRole('admin'), routerDashboard);
 
 router.use('/peminjaman-barang', checkRole('admin'), routerPeminjamanBarang);
+
+router.use('/jadwal-maintenance', checkRole('admin'), routerJadwalMaintenance);
+
+router.use('/perbaikan-komputer', checkRole('admin'), routerPerbaikanKomputer);
 
 router.get('/', (req, res) => {
   res.status(200).json({

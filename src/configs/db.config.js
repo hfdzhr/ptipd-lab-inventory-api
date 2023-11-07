@@ -7,6 +7,7 @@ const pool = mysql.createPool({
   database: process.env.DATABASE_NAME,
   waitForConnections: true,
   connectionLimit: 10,
+  timezone: '+07:00'
 });
 
 pool.getConnection((err, connection) => {

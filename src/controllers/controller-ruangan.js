@@ -1,10 +1,13 @@
 const db = require('../configs/db.config');
+const SQL = require('sql-template-strings');
 
 // Menampilkan semua data
 const getDataRuangan = async (req, res) => {
   try {
     const data = await new Promise((resolve, reject) => {
-      db.query('SELECT * FROM ruangan', function (error, rows) {
+      const selectAllRuanganQuery = SQL`SELECT * FROM ruangan`;
+
+      db.query(selectAllRuanganQuery, function (error, rows) {
         if (error) {
           reject(error);
         } else {
@@ -36,19 +39,17 @@ const getDataRuangan = async (req, res) => {
 
 const getSingleDataRuangan = async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const ruanganId = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
-      db.query(
-        'SELECT * FROM ruangan WHERE id = ?;',
-        [id],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(rows);
-          }
+      const selectRuanganByIdQuery = SQL`SELECT * FROM ruangan WHERE id = ${ruanganId}`;
+
+      db.query(selectRuanganByIdQuery, function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(rows);
         }
-      );
+      });
     });
 
     if (data.length !== 0) {
@@ -84,31 +85,28 @@ const getSingleDataRuangan = async (req, res) => {
 // Menambahkan data produk
 const addDataRuangan = async (req, res) => {
   try {
-    let dataRuangan = {
+    const ruanganData = {
       nama_ruangan: req.body.nama_ruangan,
       jumlah_komputer_laptop: parseInt(req.body.jumlah_komputer_laptop),
       penanggung_jawab: req.body.penanggung_jawab,
     };
+    const insertRuanganQuery = SQL`INSERT INTO ruangan SET ${ruanganData}`;
 
     const result = await new Promise((resolve, reject) => {
-      db.query(
-        'INSERT INTO ruangan SET ?;',
-        [dataRuangan],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(true);
-          }
+      db.query(insertRuanganQuery, function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(true);
         }
-      );
+      });
     });
 
     if (result) {
       res.status(201).send({
         code: 201,
         status: 'CREATED',
-        data: dataRuangan,
+        data: ruanganData,
       });
     } else {
       res.status(400).send({
@@ -147,25 +145,22 @@ const addDataRuangan = async (req, res) => {
 // Mengubah data
 const editDataRuangan = async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    let dataRuanganEdit = {
+    const ruanganId = parseInt(req.params.id);
+    const ruanganData = {
       nama_ruangan: req.body.nama_ruangan,
       jumlah_komputer_laptop: req.body.jumlah_komputer_laptop,
       penanggung_jawab: req.body.penanggung_jawab,
     };
+    const updateRuanganQuery = SQL`UPDATE ruangan SET ${ruanganData} WHERE id = ${ruanganId}`;
 
     const result = await new Promise((resolve, reject) => {
-      db.query(
-        'UPDATE ruangan SET ? WHERE id = ?;',
-        [dataRuanganEdit, id],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(true);
-          }
+      db.query(updateRuanganQuery, function (error) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(true);
         }
-      );
+      });
     });
 
     if (result) {
@@ -173,8 +168,8 @@ const editDataRuangan = async (req, res) => {
         code: 200,
         status: 'OK',
         data: {
-          id: id,
-          ...dataRuanganEdit,
+          id: ruanganId,
+          ...ruanganData,
         },
       });
     } else {
@@ -214,26 +209,24 @@ const editDataRuangan = async (req, res) => {
 // Delete Data Produk
 const deleteDataRuangan = async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const ruanganId = parseInt(req.params.id);
+    const deleteRuanganByIdQuery = SQL`DELETE FROM ruangan WHERE id = ${ruanganId}`;
+
     const result = await new Promise((resolve, reject) => {
-      db.query(
-        'DELETE FROM ruangan WHERE id = ?',
-        [id],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(true);
-          }
+      db.query(deleteRuanganByIdQuery, function (error) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(true);
         }
-      );
+      });
     });
 
     if (result) {
       res.status(200).send({
         code: 200,
         status: 'OK',
-        deleted_data_id: id,
+        deleted_data_id: ruanganId,
       });
     } else {
       res.status(400).send({

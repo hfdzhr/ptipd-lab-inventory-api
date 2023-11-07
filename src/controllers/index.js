@@ -7,6 +7,8 @@ const komputer = require('./controller-komputer');
 const barangPendukung = require('./controller-barang-pendukung')
 const dashboard = require('./controller-dashboard')
 const peminjamanBarang = require('./controller-peminjaman-barang')
+const jadwalMaintenance = require('./controller-jadwal-maintenance')
+const perbaikanKomputer = require('./controller-perbaikan-komputer')
 
 module.exports = {
   users,
@@ -17,5 +19,7 @@ module.exports = {
   komputer,
   barangPendukung,
   dashboard,
-  peminjamanBarang
+  peminjamanBarang,
+  jadwalMaintenance,
+  perbaikanKomputer
 };

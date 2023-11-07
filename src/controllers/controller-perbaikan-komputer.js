@@ -1,47 +1,49 @@
-const { log } = require('util');
 const db = require('../configs/db.config');
 
-// Menampilkan semua data
-const getDataKomputer = async (req, res) => {
-  const tipe = req.query.tipe || 0;
-  const kondisi = req.query.kondisi || 0;
-  const page = parseInt(req.query.page) || 0;
-  const limit = parseInt(req.query.limit) || 10;
-  const search = req.query.search_query || '';
-  const offset = page * limit;
-
+const getDataPerbaikanKomputer = async (req, res) => {
   const totalRows = await new Promise((resolve, reject) => {
-    const countKomputerQuery = `SELECT COUNT(*) FROM komputer JOIN merk m ON id_merk = m.id JOIN ruangan r ON id_ruangan = r.id JOIN tipe_barang tb ON id_tipe = tb.id WHERE tb.tipe_barang = ? AND komputer.kondisi =  ? AND (r.nama_ruangan LIKE ? OR m.nama_merk LIKE ?)`;
+    const countDataPerbaikanKomputer = `SELECT
+	COUNT(*)
+FROM
+	perbaikan_komputer pk
+JOIN komputer k ON
+	pk.id_komputer = k.id;`;
 
-    db.query(
-      countKomputerQuery,
-      [tipe, kondisi, `%${search}%`, `%${search}%`],
-      function (error, rows) {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(rows[0]['COUNT(*)']);
-        }
+    db.query(countDataPerbaikanKomputer, function (error, rows) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(rows[0]['COUNT(*)']);
       }
-    );
+    });
   });
 
-  const totalPage = Math.ceil(totalRows / limit);
-
   const data = await new Promise((resolve, reject) => {
-    const getKomputerQuery = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe, tipe_barang.tipe_barang, komputer.processor, komputer.ram, komputer.storage, komputer.kondisi, ruangan.id AS id_ruangan, ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id WHERE tipe_barang.tipe_barang = ? AND komputer.kondisi = ? AND (ruangan.nama_ruangan LIKE ? OR merk.nama_merk LIKE ?) ORDER BY komputer.id DESC LIMIT ? OFFSET ?`;
+    let queryDataPerbaikanKomputer = `SELECT 
+	pk.id,
+	pk.id_komputer,
+	r.nama_ruangan,
+    k.urutan_meja,
+	k.kondisi,
+	pk.jenis_perbaikan,
+	pk.tanggal_mulai,
+	pk.tanggal_berakhir, 
+    pk.created_at,
+    pk.updated_at
+FROM
+	perbaikan_komputer pk 
+JOIN komputer k ON
+	pk.id_komputer = k.id
+JOIN ruangan r ON
+	k.id_ruangan = r.id;`;
 
-    db.query(
-      getKomputerQuery,
-      [tipe, kondisi, `%${search}%`, `%${search}%`, limit, offset],
-      function (error, rows) {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(rows);
-        }
+    db.query(queryDataPerbaikanKomputer, function (error, rows) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(rows);
       }
-    );
+    });
   });
 
   if (data) {
@@ -50,7 +52,6 @@ const getDataKomputer = async (req, res) => {
       status: 'OK',
       data: data,
       count: totalRows,
-      totalPage: totalPage,
     });
   } else {
     res.send({
@@ -60,12 +61,29 @@ const getDataKomputer = async (req, res) => {
   }
 };
 
-const getSingleDataKomputer = async (req, res) => {
+const getSingleDataPerbaikanKomputer = async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const data = await new Promise((resolve, reject) => {
-      const query = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe_barang, tipe_barang.tipe_barang, komputer.processor, komputer.ram, komputer.storage , komputer.kondisi, ruangan.id AS id_ruangan ,ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id WHERE komputer.id = ?;`;
-      db.query(query, [id], function (error, rows) {
+      const querySingleDataPerbaikan = `SELECT 
+      pk.id,
+      pk.id_komputer,
+      r.nama_ruangan,
+      k.urutan_meja,
+      k.kondisi,
+      pk.jenis_perbaikan,
+      pk.tanggal_mulai,
+      pk.tanggal_berakhir,
+      pk.created_at,
+      pk.updated_at
+  FROM
+      perbaikan_komputer pk 
+  JOIN komputer k ON
+      pk.id_komputer = k.id
+  JOIN ruangan r ON
+      k.id_ruangan = r.id
+  WHERE pk.id = ?;`;
+      db.query(querySingleDataPerbaikan, [id], function (error, rows) {
         if (error) {
           reject(error);
         } else {
@@ -105,24 +123,20 @@ const getSingleDataKomputer = async (req, res) => {
 };
 
 // Menambahkan data produk
-const addDataKomputer = async (req, res) => {
+const addDataPerbaikanKomputer = async (req, res) => {
   try {
-    let dataKomputer = {
-      id_merk: parseInt(req.body.id_merk),
-      id_tipe: parseInt(req.body.id_tipe),
-      processor: req.body.processor,
-      ram: parseInt(req.body.ram),
-      storage: parseInt(req.body.storage),
-      kondisi: req.body.kondisi,
-      id_ruangan: parseInt(req.body.id_ruangan),
-      urutan_meja: req.body.urutan_meja,
+    let dataPerbaikanKomputer = {
+      id_komputer: parseInt(req.body.id_komputer),
+      jenis_perbaikan: req.body.jenis_perbaikan,
+      tanggal_mulai: req.body.tanggal_mulai,
+      tanggal_berakhir: req.body.tanggal_berakhir,
     };
 
     const result = await new Promise((resolve, reject) => {
       db.query(
-        'INSERT INTO komputer SET ?;',
-        [dataKomputer],
-        function (error, rows) {
+        'INSERT INTO perbaikan_komputer SET ?;',
+        [dataPerbaikanKomputer],
+        function (error) {
           if (error) {
             reject(error);
           } else {
@@ -136,7 +150,7 @@ const addDataKomputer = async (req, res) => {
       res.status(201).send({
         code: 201,
         status: 'CREATED',
-        data: dataKomputer,
+        data: dataPerbaikanKomputer,
       });
     } else {
       res.status(400).send({
@@ -195,25 +209,21 @@ const addDataKomputer = async (req, res) => {
 };
 
 // Mengubah data
-const editDataKomputer = async (req, res) => {
+const editDataPerbaikanKomputer = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    let dataKomputerEdit = {
-      id_merk: parseInt(req.body.id_merk),
-      id_tipe: parseInt(req.body.id_tipe),
-      processor: req.body.processor,
-      ram: parseInt(req.body.ram),
-      storage: parseInt(req.body.storage),
-      kondisi: req.body.kondisi,
-      id_ruangan: parseInt(req.body.id_ruangan),
-      urutan_meja: req.body.urutan_meja,
+    let dataPerbaikanKomputerEdit = {
+      id_komputer: parseInt(req.body.id_komputer),
+      jenis_perbaikan: req.body.jenis_perbaikan,
+      tanggal_mulai: req.body.tanggal_mulai,
+      tanggal_berakhir: req.body.tanggal_berakhir,
     };
 
     const result = await new Promise((resolve, reject) => {
       db.query(
-        'UPDATE komputer SET ? WHERE id = ?;',
-        [dataKomputerEdit, id],
-        function (error, rows) {
+        'UPDATE perbaikan_komputer SET ? WHERE id = ?;',
+        [dataPerbaikanKomputerEdit, id],
+        function (error) {
           if (error) {
             reject(error);
           } else {
@@ -229,7 +239,7 @@ const editDataKomputer = async (req, res) => {
         status: 'OK',
         data: {
           id: id,
-          ...dataKomputerEdit,
+          ...dataPerbaikanKomputerEdit,
         },
       });
     } else {
@@ -289,15 +299,15 @@ const editDataKomputer = async (req, res) => {
 };
 
 // Delete Data Produk
-const deleteDataKomputer = async (req, res) => {
+const deleteDataPerbaikanKomputer = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
     const result = await new Promise((resolve, reject) => {
       db.query(
-        'DELETE FROM komputer WHERE id = ?;',
+        'DELETE FROM perbaikan_komputer WHERE id = ?;',
         [id],
-        function (error, rows) {
+        function (error) {
           if (error) {
             reject(error);
           } else {
@@ -339,79 +349,78 @@ const deleteDataKomputer = async (req, res) => {
   }
 };
 
-const statistikDataKomputer = async (req, res) => {
-  try {
-    const today = new Date();
-    const currentYear = today.getFullYear();
-    const kondisiKomputer = req.query.kondisi || 0;
-    const tahun = parseInt(req.query.tahun) || currentYear;
+// const statistikDataKomputer = async (req, res) => {
+//   try {
+//     const today = new Date();
+//     const currentYear = today.getFullYear();
+//     const kondisiKomputer = req.query.kondisi || 0;
+//     const tahun = parseInt(req.query.tahun) || currentYear;
 
-    const result = await new Promise((resolve, reject) => {
-      const queryStatistikKomputer = `
-      WITH RECURSIVE MonthsList AS (
-        SELECT 1 AS m
-        UNION ALL
-        SELECT m + 1
-        FROM MonthsList
-        WHERE m < 12
-      )
-      
-      SELECT ? AS tahun, MonthsList.m AS bulan, MONTHNAME(STR_TO_DATE(CONCAT(MonthsList.m, ' 1'), '%m %d')) AS nama_bulan, COALESCE(COUNT(k.created_at), 0) AS jumlah_komputer
-      FROM MonthsList
-      LEFT JOIN komputer k ON MONTH(k.created_at) = MonthsList.m AND YEAR(k.created_at) = ? AND k.kondisi = ?
-      GROUP BY MonthsList.m;
-      `;
-      db.query(
-        queryStatistikKomputer,
-        [tahun, tahun, kondisiKomputer],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(rows);
-          }
-        }
-      );
-    });
+//     const result = await new Promise((resolve, reject) => {
+//       const queryStatistikKomputer = `
+//       WITH RECURSIVE MonthsList AS (
+//         SELECT 1 AS m
+//         UNION ALL
+//         SELECT m + 1
+//         FROM MonthsList
+//         WHERE m < 12
+//       )
 
-    if (result) {
-      res.status(200).send({
-        code: 200,
-        status: 'OK',
-        kondisi: kondisiKomputer,
-        data: result,
-      });
-    } else {
-      res.status(400).send({
-        code: 400,
-        status: 'BAD_REQUEST',
-        errors: {
-          id: [
-            'Gunakan tipe data integer',
-            'Cek kembali nomor id',
-            'Gunakan id yang sesuai',
-            'Berisikan 4 digit',
-            'Tidak boleh kosong',
-            'Tidak boleh berisi data null',
-            'Cek kembeli parameter',
-          ],
-        },
-      });
-    }
-  } catch (error) {
-    res.status(500).send({
-      code: 500,
-      status: 'INTERNAL_SERVER_ERROR',
-      error: error.message,
-    });
-  }
-};
+//       SELECT ? AS tahun, MonthsList.m AS bulan, MONTHNAME(STR_TO_DATE(CONCAT(MonthsList.m, ' 1'), '%m %d')) AS nama_bulan, COALESCE(COUNT(k.created_at), 0) AS jumlah_komputer
+//       FROM MonthsList
+//       LEFT JOIN komputer k ON MONTH(k.created_at) = MonthsList.m AND YEAR(k.created_at) = ? AND k.kondisi = ?
+//       GROUP BY MonthsList.m;
+//       `;
+//       db.query(
+//         queryStatistikKomputer,
+//         [tahun, tahun, kondisiKomputer],
+//         function (error, rows) {
+//           if (error) {
+//             reject(error);
+//           } else {
+//             resolve(rows);
+//           }
+//         }
+//       );
+//     });
+
+//     if (result) {
+//       res.status(200).send({
+//         code: 200,
+//         status: 'OK',
+//         kondisi: kondisiKomputer,
+//         data: result,
+//       });
+//     } else {
+//       res.status(400).send({
+//         code: 400,
+//         status: 'BAD_REQUEST',
+//         errors: {
+//           id: [
+//             'Gunakan tipe data integer',
+//             'Cek kembali nomor id',
+//             'Gunakan id yang sesuai',
+//             'Berisikan 4 digit',
+//             'Tidak boleh kosong',
+//             'Tidak boleh berisi data null',
+//             'Cek kembeli parameter',
+//           ],
+//         },
+//       });
+//     }
+//   } catch (error) {
+//     res.status(500).send({
+//       code: 500,
+//       status: 'INTERNAL_SERVER_ERROR',
+//       error: error.message,
+//     });
+//   }
+// };
 
 module.exports = {
-  getDataKomputer,
-  getSingleDataKomputer,
-  addDataKomputer,
-  editDataKomputer,
-  deleteDataKomputer,
-  statistikDataKomputer,
+  getDataPerbaikanKomputer,
+  getSingleDataPerbaikanKomputer,
+  addDataPerbaikanKomputer,
+  editDataPerbaikanKomputer,
+  deleteDataPerbaikanKomputer,
 };

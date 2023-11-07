@@ -1,0 +1,29 @@
+{
+  "code": 200,
+  "status": "OK",
+  "data": [
+    {
+      "id": 7000,
+      "perangkat_pendukung": { // Dari Table Perangkat Pendukung
+        "id_perangkat_pendukung": 2000,
+        "nama_barang": "Canon MP287",
+        "tipe": "Printer",
+        "id_ruagan": 1,
+        "nama_ruangan": "LAB 2.3"
+      },
+      "komputer": { // Dari Table Komputer
+        "id_komputer": 3000,
+        "merk": "Dell",
+        "tipe": "Komputer",
+        "id_ruangan": 4,
+        "nama_ruangan": "LAB 2.4"
+      },
+      "tgl_peminjaman": "20101212",
+      "tgl_kembali": "20101212",
+      "status_peminjaman": "Peminaman Sementara",
+      "peminjaman": "Hafid Al Azhar",
+      "crated_at": "28728372",
+      "updated_at": "28728372"
+    }
+  ]
+}

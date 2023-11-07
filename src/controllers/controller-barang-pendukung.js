@@ -1,11 +1,78 @@
+const { log } = require('util');
 const db = require('../configs/db.config');
 
 // Menampilkan semua data
 const getDataBarangPendukung = async (req, res) => {
   try {
-    const data = await new Promise((resolve, reject) => {
+    const kondisi = req.query.kondisi || 0;
+    const page = parseInt(req.query.page) || 0;
+    const limit = parseInt(req.query.limit) || 10;
+    const search = req.query.search_query || '';
+    const offset = page * limit;
+
+    const totalRows = await new Promise((resolve, reject) => {
+      const countBarangPendkungQuery = `SELECT
+      COUNT(*)
+    FROM
+      barang_pendukung
+    JOIN merk ON
+      barang_pendukung.id_merk = merk.id
+    JOIN tipe_barang ON
+      barang_pendukung.id_tipe_barang = tipe_barang.id
+    WHERE
+      barang_pendukung.kondisi = ?
+      AND (tipe_barang.tipe_barang LIKE ?
+        OR merk.nama_merk LIKE ?
+        OR barang_pendukung.nama_barang LIKE ?);`;
+
       db.query(
-        'SELECT barang_pendukung.id, barang_pendukung.nama_barang, tipe_barang.tipe_barang, merk.nama_merk, barang_pendukung.kondisi, barang_pendukung.keterangan, barang_pendukung.created_at, barang_pendukung.updated_at FROM barang_pendukung JOIN tipe_barang ON id_tipe_barang = tipe_barang.id JOIN merk ON id_merk = merk.id',
+        countBarangPendkungQuery,
+        [kondisi, `%${search}%`, `%${search}%`, `%${search}%`],
+        function (error, rows) {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(rows[0]['COUNT(*)']);
+          }
+        }
+      );
+    });
+
+    const totalPage = Math.ceil(totalRows / limit);
+
+    const data = await new Promise((resolve, reject) => {
+      const queryGetDataKomputer = `SELECT
+      barang_pendukung.id,
+      barang_pendukung.nama_barang,
+      barang_pendukung.id_tipe_barang
+      tipe_barang.tipe_barang,
+      barang_pendukung.id_merk,
+      merk.nama_merk,
+      barang_pendukung.kondisi,
+      barang_pendukung.keterangan,
+      barang_pendukung.id_ruangan,
+      ruangan.nama_ruangan,
+      barang_pendukung.created_at,
+      barang_pendukung.updated_at
+    FROM
+      barang_pendukung
+    JOIN merk ON
+      id_merk = merk.id
+    JOIN tipe_barang ON
+      id_tipe_barang = tipe_barang.id
+    JOIN ruangan ON 
+      id_ruangan = ruangan.id
+    WHERE
+      barang_pendukung.kondisi = ?
+      AND (tipe_barang.tipe_barang LIKE ?
+        OR merk.nama_merk LIKE ?
+        OR barang_pendukung.nama_barang LIKE ?)
+    ORDER BY
+      barang_pendukung.id DESC
+    LIMIT ? OFFSET ?;`;
+      db.query(
+        queryGetDataKomputer,
+        [kondisi, `%${search}%`, `%${search}%`, `%${search}%`, limit, offset],
         function (error, rows) {
           if (error) {
             reject(error);
@@ -42,8 +109,32 @@ const getSingleDataBarangPendukung = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
+      const queryEditDataBarangPendukung = `SELECT
+      barang_pendukung.id,
+      barang_pendukung.nama_barang,
+      barang_pendukung.id_tipe_barang,
+      tipe_barang.tipe_barang,
+      barang_pendukung.id_merk,
+      merk.nama_merk,
+      barang_pendukung.kondisi,
+      barang_pendukung.keterangan,
+      barang_pendukung.id_ruangan,
+      ruangan.nama_ruangan,
+      barang_pendukung.created_at,
+      barang_pendukung.updated_at
+    FROM
+      barang_pendukung
+    JOIN merk ON
+      id_merk = merk.id
+    JOIN tipe_barang ON
+      id_tipe_barang = tipe_barang.id
+    JOIN ruangan ON 
+      id_ruangan = ruangan.id
+    WHERE
+      barang_pendukung.id = ?
+    ;`
       db.query(
-        'SELECT barang_pendukung.id, barang_pendukung.nama_barang, tipe_barang.tipe_barang, merk.nama_merk, barang_pendukung.kondisi, barang_pendukung.keterangan, barang_pendukung.created_at, barang_pendukung.updated_at FROM barang_pendukung JOIN tipe_barang ON id_tipe_barang = tipe_barang.id JOIN merk ON id_merk = merk.id WHERE barang_pendukung.id = ?;',
+        queryEditDataBarangPendukung,
         [id],
         function (error, rows) {
           if (error) {
@@ -94,6 +185,7 @@ const addDataBarangPendukung = async (req, res) => {
       id_merk: parseInt(req.body.id_merk),
       kondisi: req.body.kondisi,
       keterangan: req.body.keterangan,
+      id_ruangan: req.body.id_ruangan,
     };
 
     const result = await new Promise((resolve, reject) => {
@@ -143,6 +235,7 @@ const editDataBarangPendukung = async (req, res) => {
       id_merk: parseInt(req.body.id_merk),
       kondisi: req.body.kondisi,
       keterangan: req.body.keterangan,
+      id_ruangan: req.body.id_ruangan,
     };
 
     const result = await new Promise((resolve, reject) => {

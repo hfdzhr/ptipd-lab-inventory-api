@@ -4,6 +4,7 @@ const util = require('util');
 const jwt = require('jsonwebtoken');
 const { log } = require('console');
 const db = require('../configs/db.config');
+const pool = require('../configs/db.config');
 
 // Register data User Baru
 const registerDataUser = async (req, res) => {
@@ -13,7 +14,7 @@ const registerDataUser = async (req, res) => {
     is_verified: 0,
     instansi: req.body.instansi,
     name: req.body.name,
-    role: req.body.role,
+    role: req.body.role || 'user',
   };
 
   const verificationToken = generateToken();
@@ -84,6 +85,217 @@ const registerDataUser = async (req, res) => {
   } catch (error) {
     console.error('Gagal mendaftar : ' + error.message);
     res.status(500).json({ message: 'Gagal mendaftar' });
+  }
+};
+
+// Ambil Data Users
+const getDataUsers = async (req, res) => {
+  // const tipe = req.query.tipe || 0;
+  // const kondisi = req.query.kondisi || 0;
+  // const page = parseInt(req.query.page) || 0;
+  // const limit = parseInt(req.query.limit) || 10;
+  const search = req.query.search_query || '';
+
+  const totalRows = await new Promise((resolve, reject) => {
+    let countJadwalMaintenanceQuery = `SELECT
+    COUNT(*)
+  FROM
+    users u
+  WHERE 
+    name LIKE ? OR instansi LIKE ?;`;
+
+    db.query(
+      countJadwalMaintenanceQuery,
+      [`%${search}%`, `%${search}%`],
+      function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(rows[0]['COUNT(*)']);
+        }
+      }
+    );
+  });
+
+  const data = await new Promise((resolve, reject) => {
+    let getJadwalMaintenanceQuery = `
+    SELECT
+	u.id_user AS id,
+	u.name,
+	u.email,
+	u.instansi,
+	u.role
+FROM
+	users u
+WHERE
+	name LIKE ? OR instansi LIKE ?;`;
+
+    db.query(
+      getJadwalMaintenanceQuery,
+      [`%${search}%`, `%${search}%`],
+      function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(rows);
+        }
+      }
+    );
+  });
+
+  if (data) {
+    res.send({
+      code: 200,
+      status: 'OK',
+      data: data,
+      count: totalRows,
+    });
+  } else {
+    res.send({
+      code: 400,
+      status: 'BAD_REQUEST',
+    });
+  }
+};
+
+// Mengedit Data User
+const editDataUsers = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const data = {
+      email: req.body.email,
+      name: req.body.name,
+      instansi: req.body.instansi,
+      role: req.body.role,
+    };
+
+
+    const result = await new Promise((resolve, reject) => {
+      let queryEditDataUsers = `UPDATE users SET ? WHERE id_user = ?;`;
+
+      db.query(queryEditDataUsers, [data, id], function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+
+    if (result) {
+      res.send({
+        code: 200,
+        status: 'OK',
+        data: data,
+      });
+    } else {
+      res.send({
+        code: 400,
+        status: 'BAD_REQUEST',
+      });
+    }
+  } catch (error) {
+    res.status(500).send({
+      code: 500,
+      status: 'INTERNAL_SERVER_ERROR',
+      error: error.message,
+    });
+  }
+};
+
+// Menghapus Data Users
+const deleteDataUsers = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+
+    const result = await new Promise((resolve, reject) => {
+      let queryDeleteDataUsers = `DELETE FROM users WHERE id_user = ?;`;
+
+      db.query(queryDeleteDataUsers, [id], function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+
+    if (result) {
+      res.status(200).send({
+        code: 200,
+        status: 'OK',
+        deleted_data_id: id,
+      });
+    } else {
+      res.status(400).send({
+        code: 400,
+        status: 'BAD_REQUEST',
+      });
+    }
+  } catch (error) {
+    res.status(500).send({
+      code: 500,
+      status: 'INTERNAL_SERVER_ERROR',
+      error: error.message,
+    });
+  }
+};
+
+// Reset Password
+const resetPasswordUsers = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const dataResetPasswordUser = {
+      password: req.body.password,
+      retypePassword: req.body.retype_password,
+    };
+
+    const { password, retypePassword } = dataResetPasswordUser;
+
+    // Verifikasi Password dan Retype Password
+    if (password === retypePassword) {
+      const result = await new Promise((resolve, reject) => {
+        let queryResetPasswordUsers = `UPDATE users SET password = ? WHERE id_user = ?;`;
+
+        db.query(
+          queryResetPasswordUsers,
+          [password, id],
+          function (error, rows) {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(true);
+            }
+          }
+        );
+      });
+
+      if (result) {
+        res.status(200).send({
+          code: 200,
+          status: 'OK',
+          updated_data_id: id,
+        });
+      } else {
+        res.status(400).send({
+          code: 400,
+          status: 'BAD_REQUEST',
+        });
+      }
+    } else {
+      res.status(400).send({
+        code: 400,
+        status: 'BAD_REQUEST',
+        error:
+          'Password dan Ulangi Password tidak sama silahkan cek kembali',
+      });
+    }
+  } catch (error) {
+    res.status(500).send({
+      code: 500,
+      status: 'INTERNAL_SERVER_ERROR',
+      error: error.message,
+    });
   }
 };
 
@@ -211,7 +423,7 @@ function sendVerificationEmail(email, token) {
 const VerifyUser = async (req, res) => {
   const token = req.params.token;
 
-  const query = util.promisify(db.query).bind(connection);
+  const query = util.promisify(db.query).bind(db);
 
   try {
     await query(
@@ -297,6 +509,10 @@ function checkRole(role) {
 
 module.exports = {
   registerDataUser,
+  getDataUsers,
+  editDataUsers,
+  deleteDataUsers,
+  resetPasswordUsers,
   loginDataUser,
   VerifyUser,
   checkRole,
