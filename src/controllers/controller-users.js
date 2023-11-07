@@ -1,87 +1,98 @@
-const config = require('../configs/database');
 const nodemailer = require('nodemailer');
 const util = require('util');
 const jwt = require('jsonwebtoken');
-const { log } = require('console');
 const db = require('../configs/db.config');
-const pool = require('../configs/db.config');
+const argon2 = require('argon2');
+const validator = require('validator');
+const cron = require('node-cron');
+const { log } = require('util');
 
 // Register data User Baru
 const registerDataUser = async (req, res) => {
-  let data = {
-    email: req.body.email,
-    password: req.body.password,
-    is_verified: 0,
-    instansi: req.body.instansi,
-    name: req.body.name,
-    role: req.body.role || 'user',
-  };
-
-  const verificationToken = generateToken();
-
   try {
-    // Periksa Apakah Email sudah terdaftar atau belum di dalam database
-    await new Promise((resolve, reject) => {
-      db.query(
-        'SELECT * FROM users WHERE email = ?',
-        data.email,
-        function (error, rows) {
-          if (error) {
-            console.error('Gagal mendaftar : ' + error.message);
-            res.status(500).json({
-              code: 500,
-              status: 'INTERNAL_SERVER_ERROR',
-              errors: [
-                'Gagal Mendafatar',
-                'Terjadi kesalan pada server',
-                'Server sedang maintenance',
-                'Server sedang penuh, mohon tunggu sebentar',
-              ],
-            });
-          } else {
-            if (rows.length > 0) {
-              // Email sudah terdaftar, kirimkan respons yang sesuai
-              res.status(400).json({
-                code: 400,
-                status: 'BAD_REQUEST',
-                errors: {
-                  email: [
-                    'Email sudah terdaftar',
-                    'Email yang didaftar sudah tersedia',
-                    'Ganti alamat email anda',
-                    'Periksa kembali alamat email anda',
-                  ],
-                },
+    const hashedPassword = await argon2.hash(req.body.password);
+    const data = {
+      email: req.body.email,
+      password: hashedPassword,
+      is_verified: 0,
+      instansi: req.body.instansi,
+      name: req.body.name,
+      role: req.body.role || 'user',
+    };
+    const verificationToken = generateToken();
+
+    const isValidEmail = await validator.isEmail(data.email);
+
+    if (isValidEmail) {
+      await new Promise((resolve, reject) => {
+        db.query(
+          'SELECT * FROM users WHERE email = ?',
+          data.email,
+          function (error, rows) {
+            if (error) {
+              console.error('Gagal mendaftar : ' + error.message);
+              res.status(500).json({
+                code: 500,
+                status: 'INTERNAL_SERVER_ERROR',
+                errors: [
+                  'Gagal Mendafatar',
+                  'Terjadi kesalan pada server',
+                  'Server sedang maintenance',
+                  'Server sedang penuh, mohon tunggu sebentar',
+                ],
               });
             } else {
-              // Email belum terdaftar, lanjutkan dengan pendaftaran
-              db.query(
-                'INSERT INTO users SET ?',
-                { ...data, verification_token: verificationToken },
-                function (error, rows) {
-                  if (error) {
-                    console.error('Gagal mendaftar : ' + error.message);
-                    res
-                      .status(500)
-                      .json({ status: 500, message: 'Gagal mendaftar' });
-                  } else {
-                    sendVerificationEmail(data.email, verificationToken);
-                    res.status(200).json({
-                      code: 200,
-                      status: 'OK',
-                      data: {
-                        message:
-                          'Registrasi berhasil silahkan cek email Anda untuk verifikasi',
-                      },
-                    });
+              if (rows.length > 0) {
+                // Email sudah terdaftar dan sudah diverifikasi, kirimkan respons yang sesuai
+                res.status(400).json({
+                  code: 400,
+                  status: 'BAD_REQUEST',
+                  errors: {
+                    email: [
+                      'Email sudah terdaftar',
+                      'Email yang didaftar sudah tersedia',
+                      'Ganti alamat email anda',
+                      'Periksa kembali alamat email anda',
+                    ],
+                  },
+                });
+              } else {
+                // Email belum terdaftar, lanjutkan dengan pendaftaran
+                db.query(
+                  'INSERT INTO users SET ?',
+                  { ...data, verification_token: verificationToken },
+                  function (error, rows) {
+                    if (error) {
+                      console.error('Gagal mendaftar : ' + error.message);
+                      res
+                        .status(500)
+                        .json({ status: 500, message: 'Gagal mendaftar' });
+                    } else {
+                      sendVerificationEmail(data.email, verificationToken);
+                      res.status(200).json({
+                        code: 200,
+                        status: 'OK',
+                        data: {
+                          message:
+                            'Registrasi berhasil silahkan cek email Anda untuk verifikasi',
+                        },
+                      });
+                    }
                   }
-                }
-              );
+                );
+              }
             }
           }
-        }
-      );
-    });
+        );
+      });
+    } else {
+      res.status(400).json({
+        code: 400,
+        status: 'BAD_REQUEST',
+        message: 'Email tidak sesuai periksa kembali email',
+      });
+    }
+    // Periksa Apakah Email sudah terdaftar atau belum di dalam database
   } catch (error) {
     console.error('Gagal mendaftar : ' + error.message);
     res.status(500).json({ message: 'Gagal mendaftar' });
@@ -97,24 +108,20 @@ const getDataUsers = async (req, res) => {
   const search = req.query.search_query || '';
 
   const totalRows = await new Promise((resolve, reject) => {
-    let countJadwalMaintenanceQuery = `SELECT
+    const countUser = `SELECT
     COUNT(*)
   FROM
     users u
   WHERE 
     name LIKE ? OR instansi LIKE ?;`;
 
-    db.query(
-      countJadwalMaintenanceQuery,
-      [`%${search}%`, `%${search}%`],
-      function (error, rows) {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(rows[0]['COUNT(*)']);
-        }
+    db.query(countUser, [`%${search}%`, `%${search}%`], function (error, rows) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(rows[0]['COUNT(*)']);
       }
-    );
+    });
   });
 
   const data = await new Promise((resolve, reject) => {
@@ -169,28 +176,38 @@ const editDataUsers = async (req, res) => {
       role: req.body.role,
     };
 
-    const result = await new Promise((resolve, reject) => {
-      let queryEditDataUsers = `UPDATE users SET ? WHERE id_user = ?;`;
+    const isValidEmail = await validator.isEmail(data.email);
 
-      db.query(queryEditDataUsers, [data, id], function (error, rows) {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(true);
-        }
-      });
-    });
+    if (isValidEmail) {
+      const result = await new Promise((resolve, reject) => {
+        let queryEditDataUsers = `UPDATE users SET ? WHERE id_user = ?;`;
 
-    if (result) {
-      res.send({
-        code: 200,
-        status: 'OK',
-        data: data,
+        db.query(queryEditDataUsers, [data, id], function (error, rows) {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(true);
+          }
+        });
       });
+
+      if (result) {
+        res.send({
+          code: 200,
+          status: 'OK',
+          data: data,
+        });
+      } else {
+        res.send({
+          code: 400,
+          status: 'BAD_REQUEST',
+        });
+      }
     } else {
-      res.send({
+      res.status(400).json({
         code: 400,
         status: 'BAD_REQUEST',
+        message: 'Email tidak sesuai periksa kembali email',
       });
     }
   } catch (error) {
@@ -253,12 +270,14 @@ const resetPasswordUsers = async (req, res) => {
 
     // Verifikasi Password dan Retype Password
     if (password === retypePassword) {
+      const hashedPassword = await argon2.hash(password);
+
       const result = await new Promise((resolve, reject) => {
         let queryResetPasswordUsers = `UPDATE users SET password = ? WHERE id_user = ?;`;
 
         db.query(
           queryResetPasswordUsers,
-          [password, id],
+          [hashedPassword, id],
           function (error, rows) {
             if (error) {
               reject(error);
@@ -307,60 +326,85 @@ function generateJWTToken(userId) {
 }
 
 const loginDataUser = async (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
-
   try {
-    const user = await new Promise((resolve, reject) => {
-      db.query(
-        'SELECT * FROM users WHERE email = ? AND password = ?;',
-        [email, password],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(rows[0]);
-          }
-        }
-      );
-    });
+    const email = req.body.email;
+    const password = req.body.password;
 
-    if (user) {
-      const token = generateJWTToken(user.id_user);
-      res.status(200).json({
-        code: 200,
-        status: 'OK',
-        data: {
-          profile: {
-            id: user.id_user,
-            name: user.name,
-            email: user.email,
-            instansi: user.instansi,
-            role: user.role,
-          },
-          message: 'Selamat Login Berhasil',
-          token,
-        },
+    const isValidEmail = await validator.isEmail(email);
+
+    if (isValidEmail) {
+      const user = await new Promise((resolve, reject) => {
+        db.query(
+          'SELECT * FROM users WHERE email = ?',
+          [email],
+          function (error, rows) {
+            if (error) {
+              reject(error);
+            } else {
+              if (rows.length === 0) {
+                res.status(401).send({
+                  code: 401,
+                  status: 'UNAUTHORIZED',
+                  error: 'Email yang dimasukan tidak terdaftar',
+                });
+              } else {
+                resolve(rows);
+              }
+            }
+          }
+        );
       });
+
+      const hashedPasswordFromDB = user[0].password;
+
+      const isPasswordValid = await argon2.verify(
+        hashedPasswordFromDB,
+        password
+      );
+
+      if (user.length > 0 && isPasswordValid) {
+        const token = generateJWTToken(user[0].id_user);
+        res.status(200).json({
+          code: 200,
+          status: 'OK',
+          data: {
+            profile: {
+              id: user[0].id_user,
+              name: user[0].name,
+              email: user[0].email,
+              instansi: user[0].instansi,
+              role: user[0].role,
+            },
+            message: 'Selamat Login Berhasil',
+            token,
+          },
+        });
+      } else {
+        res.status(401).json({
+          code: 401,
+          status: 'UNAUTHORIZED',
+          errors: {
+            email: [
+              'Silahkan masukan email dengan benar',
+              'Pastikan email telah terdaftar',
+              'Periksa kembali email',
+              'Silahkan register jika belum mempunyai akun',
+              'Perhatikan huruf besar dan juga kecil',
+            ],
+            password: [
+              'Silahkan masukan password dengan benar',
+              'Periksa kembali password',
+              'Silahkan register jika belum mempunyai akun',
+              'Perhatikan huruf besar dan juga kecil',
+            ],
+          },
+        });
+      }
     } else {
-      res.status(401).json({
-        code: 401,
-        status: 'UNAUTHORIZED',
-        errors: {
-          email: [
-            'Silahkan masukan email dengan benar',
-            'Pastikan email telah terdaftar',
-            'Periksa kembali email',
-            'Silahkan register jika belum mempunyai akun',
-            'Perhatikan huruf besar dan juga kecil',
-          ],
-          password: [
-            'Silahkan masukan password dengan benar',
-            'Periksa kembali password',
-            'Silahkan register jika belum mempunyai akun',
-            'Perhatikan huruf besar dan juga kecil',
-          ],
-        },
+      res.status(400).send({
+        code: 400,
+        status: 'BAD_REQUEST',
+        error: 'Email tidak sesuai periksa kembali email',
       });
     }
   } catch (error) {
@@ -376,10 +420,6 @@ const loginDataUser = async (req, res) => {
     });
   }
 };
-
-// const deleteDataUser = asyns (req, res) => {
-//   const id_user = req.params.id
-// }
 
 const middleware = (mail, callback) => {
   setTimeout(() => {
@@ -443,6 +483,7 @@ function generateToken() {
   );
 }
 
+// Function Checkrole
 function checkRole(role) {
   return (req, res, next) => {
     const tokenHeader = req.headers.authorization;
