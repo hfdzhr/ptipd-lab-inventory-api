@@ -188,8 +188,8 @@ WHERE pb.id = ?`;
 const addDataPeminjamanBarang = async (req, res) => {
   try {
     let dataPeminjamanBarang = {
-      id_barang_pendukung: parseInt(req.body.id_barang_pendukung),
-      id_komputer: parseInt(req.body.id_komputer),
+      id_barang_pendukung: parseInt(req.body.id_barang_pendukung) || null,
+      id_komputer: parseInt(req.body.id_komputer) || null,
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
       status_peminjaman: req.body.status_peminjaman,
