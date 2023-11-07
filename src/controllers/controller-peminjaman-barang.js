@@ -63,7 +63,7 @@ const getDataPeminjamanBarang = async (req, res) => {
       tgl_kembali: item.tgl_kembali,
       peminjam: item.peminjam,
       created_at: item.created_at,
-      updated_at: item.updated_at
+      updated_at: item.updated_at,
     }));
 
     if (data) {
@@ -90,25 +90,75 @@ const getDataPeminjamanBarang = async (req, res) => {
 const getSingleDataPeminjamanBarang = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+    const selectRuanganByIdQuery = `SELECT 
+    pb.id,
+    pb.id_barang_pendukung,
+    bp.nama_barang,
+    m_bp.nama_merk AS merk_bp,
+    tb_bp.tipe_barang AS tipe_barang_bp,
+    bp.id_ruangan AS id_ruangan_bp,
+    r_bp.nama_ruangan AS nama_ruangan_bp,
+    pb.id_komputer,
+    m_k.nama_merk AS nama_merk_k,
+    tb_k.tipe_barang AS tipe_barang_k,
+    k.id_ruangan,
+    r_k.nama_ruangan AS nama_ruangan_k,
+    k.urutan_meja,
+    pb.tgl_peminjaman,
+    pb.tgl_kembali,
+    pb.status_peminjaman,
+    pb.peminjam,
+    pb.created_at,
+    pb.updated_at
+FROM peminjaman_barang pb
+LEFT JOIN komputer k ON pb.id_komputer = k.id
+LEFT JOIN barang_pendukung bp ON pb.id_barang_pendukung = bp.id
+LEFT JOIN ruangan r_k ON k.id_ruangan = r_k.id
+LEFT JOIN ruangan r_bp ON bp.id_ruangan = r_bp.id
+LEFT JOIN tipe_barang tb_k ON k.id_tipe = tb_k.id
+LEFT JOIN tipe_barang tb_bp ON bp.id_tipe_barang = tb_bp.id
+LEFT JOIN merk m_k ON k.id_merk = m_k.id
+LEFT JOIN merk m_bp ON bp.id_merk = m_bp.id
+WHERE pb.id = ?`;
     const data = await new Promise((resolve, reject) => {
-      db.query(
-        'SELECT peminjaman_barang.id, barang_pendukung.nama_barang, peminjaman_barang.tgl_peminjaman, peminjaman_barang.tgl_kembali, peminjaman_barang.status_peminjaman, peminjaman_barang.peminjam, peminjaman_barang.created_at, peminjaman_barang.updated_at FROM peminjaman_barang JOIN barang_pendukung ON id_barang_pendukung = barang_pendukung.id WHERE peminjaman_barang.id = ?;',
-        [id],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(rows);
-          }
+      db.query(selectRuanganByIdQuery, [id], function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(rows);
         }
-      );
+      });
     });
+    const nestedData = data.map((item) => ({
+      id: item.id,
+      barang_pendukung: {
+        id_barang_pendukung: item.id_barang_pendukung,
+        nama_barang: item.nama_barang,
+        tipe_barang: item.tipe_barang_bp,
+        nama_merk: item.merk_bp,
+        id_ruangan: item.id_ruangan_bp,
+        nama_ruangan: item.nama_ruangan_bp,
+      },
+      komputer: {
+        id_komputer: item.id_komputer,
+        nama_merk: item.nama_merk_k,
+        tipe_barang: item.tipe_barang_k,
+        id_ruangan: item.id_ruangan,
+        nama_ruangan: item.nama_ruangan_k,
+        urutan_meja: item.urutan_meja,
+      },
+      tgl_peminjaman: item.tgl_peminjaman,
+      tgl_kembali: item.tgl_kembali,
+      peminjam: item.peminjam,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    }));
 
     if (data.length !== 0) {
       res.status(200).send({
         code: 200,
         status: 'OK',
-        data: data[0],
+        data: nestedData[0],
       });
     } else if (data.length === 0) {
       res.status(200).send({
