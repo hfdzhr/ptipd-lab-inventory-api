@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
+const port = process.env.APP_PORT || 3000;
 // Definisi environtmen secara global (.env)
 require('dotenv').config();
 
@@ -13,6 +14,6 @@ const appRoute = require('./src/routers');
 app.use('/', appRoute);
 
 // Menjalankan server sesuai dengan port yang terdaftar di .env (8080)
-app.listen(process.env.APP_PORT, '0.0.0.0', () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server Berjalan http://localhost:${process.env.APP_PORT}`);
 });
