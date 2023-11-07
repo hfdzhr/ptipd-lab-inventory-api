@@ -13,6 +13,6 @@ const appRoute = require('./src/routers');
 app.use('/', appRoute);
 
 // Menjalankan server sesuai dengan port yang terdaftar di .env (8080)
-app.listen(process.env.APP_PORT, () => {
+app.listen(process.env.APP_PORT, '0.0.0.0', () => {
   console.log(`Server Berjalan http://localhost:${process.env.APP_PORT}`);
 });
