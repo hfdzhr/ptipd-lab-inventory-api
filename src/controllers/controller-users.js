@@ -169,7 +169,6 @@ const editDataUsers = async (req, res) => {
       role: req.body.role,
     };
 
-
     const result = await new Promise((resolve, reject) => {
       let queryEditDataUsers = `UPDATE users SET ? WHERE id_user = ?;`;
 
@@ -286,8 +285,7 @@ const resetPasswordUsers = async (req, res) => {
       res.status(400).send({
         code: 400,
         status: 'BAD_REQUEST',
-        error:
-          'Password dan Ulangi Password tidak sama silahkan cek kembali',
+        error: 'Password dan Ulangi Password tidak sama silahkan cek kembali',
       });
     }
   } catch (error) {
@@ -407,7 +405,7 @@ function sendVerificationEmail(email, token) {
     from: process.env.EMAIL_TRANSPORT,
     to: email,
     subject: 'Verifikasi Email',
-    text: `Klik tautan berikut untuk verifikasi email Anda: http://localhost:3000/users/verify/${token}`,
+    text: `Klik tautan berikut untuk verifikasi email Anda: ${process.env.URL_HOST}/users/verify/${token}`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {

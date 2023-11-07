@@ -15,5 +15,5 @@ app.use('/', appRoute);
 
 // Menjalankan server sesuai dengan port yang terdaftar di .env (8080)
 app.listen(port, '0.0.0.0', () => {
-  console.log(`Server Berjalan http://localhost:${process.env.APP_PORT}`);
+  console.log(`Server Berjalan ${process.env.URL_HOST}`);
 });
