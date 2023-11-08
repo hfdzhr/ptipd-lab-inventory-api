@@ -44,7 +44,7 @@ const getDataBarangPendukung = async (req, res) => {
       const queryGetDataKomputer = `SELECT
       barang_pendukung.id,
       barang_pendukung.nama_barang,
-      barang_pendukung.id_tipe_barang
+      barang_pendukung.id_tipe_barang,
       tipe_barang.tipe_barang,
       barang_pendukung.id_merk,
       merk.nama_merk,
