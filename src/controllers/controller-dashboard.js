@@ -5,9 +5,7 @@ const getDashboardData = async (req, res) => {
   try {
     const [komputerRusakResult, ruanganResult, komputerResult, barangResult] =
       await Promise.all([
-        queryDatabase(
-          'SELECT COUNT(*) AS jumlah_komputer_rusak FROM komputer WHERE kondisi = "Rusak"'
-        ),
+        queryDatabase('SELECT COUNT(*) AS jumlah_komputer_rusak FROM komputer WHERE kondisi = "Rusak"'),
         queryDatabase('SELECT COUNT(*) AS jumlah_ruangan FROM ruangan'),
         queryDatabase('SELECT COUNT(*) AS jumlah_komputer FROM komputer'),
         queryDatabase('SELECT COUNT(*) AS jumlah_barang FROM barang_pendukung'),

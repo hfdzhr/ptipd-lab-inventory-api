@@ -6,6 +6,8 @@ const getDataPeminjamanBarang = async (req, res) => {
     const data = await new Promise((resolve, reject) => {
       const queryPeminjamanRuangan = `SELECT 
       pb.id,
+      pb.peminjam,
+      pb.instansi,
       pb.id_barang_pendukung,
       bp.nama_barang,
       m_bp.nama_merk AS merk_bp,
@@ -18,10 +20,11 @@ const getDataPeminjamanBarang = async (req, res) => {
       k.id_ruangan,
       r_k.nama_ruangan AS nama_ruangan_k,
       k.urutan_meja,
+      pb.nama_kegiatan,
+      pb.jenis_kegiatan,
       pb.tgl_peminjaman,
       pb.tgl_kembali,
       pb.status_peminjaman,
-      pb.peminjam,
       pb.created_at,
       pb.updated_at
   FROM peminjaman_barang pb
@@ -43,6 +46,8 @@ const getDataPeminjamanBarang = async (req, res) => {
     });
     const nestedData = data.map((item) => ({
       id: item.id,
+      nama_peminjam: item.peminjam,
+      instansi: item.instansi,
       barang_pendukung: {
         id_barang_pendukung: item.id_barang_pendukung,
         nama_barang: item.nama_barang,
@@ -59,9 +64,11 @@ const getDataPeminjamanBarang = async (req, res) => {
         nama_ruangan: item.nama_ruangan_k,
         urutan_meja: item.urutan_meja,
       },
+      nama_kegiatan: item.nama_kegiatan,
+      jenis_kegiatan: item.jenis_kegiatan,
       tgl_peminjaman: item.tgl_peminjaman,
       tgl_kembali: item.tgl_kembali,
-      peminjam: item.peminjam,
+      status_peminjaman: item.status_peminjaman,
       created_at: item.created_at,
       updated_at: item.updated_at,
     }));
@@ -92,6 +99,8 @@ const getSingleDataPeminjamanBarang = async (req, res) => {
     const id = parseInt(req.params.id);
     const selectRuanganByIdQuery = `SELECT 
     pb.id,
+    pb.peminjam,
+    pb.instansi,
     pb.id_barang_pendukung,
     bp.nama_barang,
     m_bp.nama_merk AS merk_bp,
@@ -104,10 +113,11 @@ const getSingleDataPeminjamanBarang = async (req, res) => {
     k.id_ruangan,
     r_k.nama_ruangan AS nama_ruangan_k,
     k.urutan_meja,
+    pb.nama_kegiatan,
+    pb.jenis_kegiatan,
     pb.tgl_peminjaman,
     pb.tgl_kembali,
     pb.status_peminjaman,
-    pb.peminjam,
     pb.created_at,
     pb.updated_at
 FROM peminjaman_barang pb
@@ -131,6 +141,8 @@ WHERE pb.id = ?`;
     });
     const nestedData = data.map((item) => ({
       id: item.id,
+      nama_peminjam: item.peminjam,
+      instansi: item.instansi,
       barang_pendukung: {
         id_barang_pendukung: item.id_barang_pendukung,
         nama_barang: item.nama_barang,
@@ -147,9 +159,11 @@ WHERE pb.id = ?`;
         nama_ruangan: item.nama_ruangan_k,
         urutan_meja: item.urutan_meja,
       },
+      nama_kegiatan: item.nama_kegiatan,
+      jenis_kegiatan: item.jenis_kegiatan,
       tgl_peminjaman: item.tgl_peminjaman,
       tgl_kembali: item.tgl_kembali,
-      peminjam: item.peminjam,
+      status_peminjaman: item.status_peminjaman,
       created_at: item.created_at,
       updated_at: item.updated_at,
     }));
@@ -188,12 +202,15 @@ WHERE pb.id = ?`;
 const addDataPeminjamanBarang = async (req, res) => {
   try {
     let dataPeminjamanBarang = {
+      peminjam: req.body.peminjam,
+      instansi: req.body.instansi,
       id_barang_pendukung: parseInt(req.body.id_barang_pendukung) || null,
       id_komputer: parseInt(req.body.id_komputer) || null,
+      nama_kegiatan: req.body.nama_kegiatan,
+      jenis_kegiatan: req.body.jenis_kegiatan,
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
       status_peminjaman: req.body.status_peminjaman,
-      peminjam: req.body.peminjam,
     };
 
     const result = await new Promise((resolve, reject) => {
@@ -259,12 +276,15 @@ const editDataPeminjamanBarang = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     let editDataPeminjamanBarang = {
-      id_barang_pendukung: parseInt(req.body.id_barang_pendukung),
-      id_komputer: parseInt(req.body.id_komputer),
+      peminjam: req.body.peminjam,
+      instansi: req.body.instansi,
+      id_barang_pendukung: parseInt(req.body.id_barang_pendukung) || null,
+      id_komputer: parseInt(req.body.id_komputer) || null,
+      nama_kegiatan: req.body.nama_kegiatan,
+      jenis_kegiatan: req.body.jenis_kegiatan,
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
       status_peminjaman: req.body.status_peminjaman,
-      peminjam: req.body.peminjam,
     };
 
     const result = await new Promise((resolve, reject) => {
