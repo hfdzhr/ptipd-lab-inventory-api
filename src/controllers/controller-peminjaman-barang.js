@@ -20,8 +20,6 @@ const getDataPeminjamanBarang = async (req, res) => {
       k.id_ruangan,
       r_k.nama_ruangan AS nama_ruangan_k,
       k.urutan_meja,
-      pb.nama_kegiatan,
-      pb.jenis_kegiatan,
       pb.tgl_peminjaman,
       pb.tgl_kembali,
       pb.status_peminjaman,
@@ -64,8 +62,6 @@ const getDataPeminjamanBarang = async (req, res) => {
         nama_ruangan: item.nama_ruangan_k,
         urutan_meja: item.urutan_meja,
       },
-      nama_kegiatan: item.nama_kegiatan,
-      jenis_kegiatan: item.jenis_kegiatan,
       tgl_peminjaman: item.tgl_peminjaman,
       tgl_kembali: item.tgl_kembali,
       status_peminjaman: item.status_peminjaman,
@@ -113,8 +109,6 @@ const getSingleDataPeminjamanBarang = async (req, res) => {
     k.id_ruangan,
     r_k.nama_ruangan AS nama_ruangan_k,
     k.urutan_meja,
-    pb.nama_kegiatan,
-    pb.jenis_kegiatan,
     pb.tgl_peminjaman,
     pb.tgl_kembali,
     pb.status_peminjaman,
@@ -159,8 +153,6 @@ WHERE pb.id = ?`;
         nama_ruangan: item.nama_ruangan_k,
         urutan_meja: item.urutan_meja,
       },
-      nama_kegiatan: item.nama_kegiatan,
-      jenis_kegiatan: item.jenis_kegiatan,
       tgl_peminjaman: item.tgl_peminjaman,
       tgl_kembali: item.tgl_kembali,
       status_peminjaman: item.status_peminjaman,
@@ -206,8 +198,6 @@ const addDataPeminjamanBarang = async (req, res) => {
       instansi: req.body.instansi,
       id_barang_pendukung: parseInt(req.body.id_barang_pendukung) || null,
       id_komputer: parseInt(req.body.id_komputer) || null,
-      nama_kegiatan: req.body.nama_kegiatan,
-      jenis_kegiatan: req.body.jenis_kegiatan,
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
       status_peminjaman: req.body.status_peminjaman,
@@ -275,13 +265,11 @@ const addDataPeminjamanBarang = async (req, res) => {
 const editDataPeminjamanBarang = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-    let editDataPeminjamanBarang = {
+    const editDataPeminjamanBarang = {
       peminjam: req.body.peminjam,
       instansi: req.body.instansi,
       id_barang_pendukung: parseInt(req.body.id_barang_pendukung) || null,
       id_komputer: parseInt(req.body.id_komputer) || null,
-      nama_kegiatan: req.body.nama_kegiatan,
-      jenis_kegiatan: req.body.jenis_kegiatan,
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
       status_peminjaman: req.body.status_peminjaman,
@@ -310,6 +298,7 @@ const editDataPeminjamanBarang = async (req, res) => {
           ...editDataPeminjamanBarang,
         },
       });
+    } else {
       res.status(400).send({
         code: 400,
         status: 'BAD_REQUEST',
