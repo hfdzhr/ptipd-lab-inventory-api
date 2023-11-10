@@ -11,7 +11,7 @@ const getDataKomputer = async (req, res) => {
   const offset = page * limit;
 
   const totalRows = await new Promise((resolve, reject) => {
-    const countKomputerQuery = `SELECT COUNT(*) FROM komputer JOIN merk m ON id_merk = m.id JOIN ruangan r ON id_ruangan = r.id JOIN tipe_barang tb ON id_tipe = tb.id WHERE tb.tipe_barang = ? AND komputer.kondisi =  ? AND (r.nama_ruangan LIKE ? OR m.nama_merk LIKE ?)`;
+    const countKomputerQuery = `SELECT COUNT(*) FROM komputer JOIN merk m ON id_merk = m.id JOIN ruangan r ON id_ruangan = r.id JOIN tipe_barang tb ON id_tipe = tb.id WHERE komputer.jenis = 'Komputer' AND tb.tipe_barang = ? AND komputer.kondisi =  ? AND (r.nama_ruangan LIKE ? OR m.nama_merk LIKE ?)`;
 
     db.query(
       countKomputerQuery,
@@ -29,7 +29,7 @@ const getDataKomputer = async (req, res) => {
   const totalPage = Math.ceil(totalRows / limit);
 
   const data = await new Promise((resolve, reject) => {
-    const getKomputerQuery = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe, tipe_barang.tipe_barang, komputer.processor, komputer.ram, komputer.storage, komputer.kondisi, ruangan.id AS id_ruangan, ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id WHERE tipe_barang.tipe_barang = ? AND komputer.kondisi = ? AND (ruangan.nama_ruangan LIKE ? OR merk.nama_merk LIKE ?) ORDER BY komputer.id DESC LIMIT ? OFFSET ?`;
+    const getKomputerQuery = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe, tipe_barang.tipe_barang, komputer.spek, komputer.jenis,komputer.kondisi, ruangan.id AS id_ruangan, ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id WHERE komputer.jenis = 'Komputer' AND tipe_barang.tipe_barang = ? AND komputer.kondisi = ? AND (ruangan.nama_ruangan LIKE ? OR merk.nama_merk LIKE ?) ORDER BY komputer.id DESC LIMIT ? OFFSET ?`;
 
     db.query(
       getKomputerQuery,
@@ -64,7 +64,7 @@ const getSingleDataKomputer = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
-      const query = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe_barang, tipe_barang.tipe_barang, komputer.processor, komputer.ram, komputer.storage , komputer.kondisi, ruangan.id AS id_ruangan ,ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id WHERE komputer.id = ?;`;
+      const query = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe_barang, tipe_barang.tipe_barang, komputer.spek, komputer.jenis, komputer.kondisi, ruangan.id AS id_ruangan ,ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id WHERE komputer.jenis = 'Komputer' AND komputer.id = ?;`;
       db.query(query, [id], function (error, rows) {
         if (error) {
           reject(error);
@@ -110,9 +110,8 @@ const addDataKomputer = async (req, res) => {
     let dataKomputer = {
       id_merk: parseInt(req.body.id_merk),
       id_tipe: parseInt(req.body.id_tipe),
-      processor: req.body.processor,
-      ram: parseInt(req.body.ram),
-      storage: parseInt(req.body.storage),
+      spek: req.body.spek,
+      jenis: req.body.jenis || 'Komputer',
       kondisi: req.body.kondisi,
       id_ruangan: parseInt(req.body.id_ruangan),
       urutan_meja: req.body.urutan_meja,
@@ -201,9 +200,8 @@ const editDataKomputer = async (req, res) => {
     let dataKomputerEdit = {
       id_merk: parseInt(req.body.id_merk),
       id_tipe: parseInt(req.body.id_tipe),
-      processor: req.body.processor,
-      ram: parseInt(req.body.ram),
-      storage: parseInt(req.body.storage),
+      spek: req.body.spek,
+      jenis: req.body.jenis || 'Komputer',
       kondisi: req.body.kondisi,
       id_ruangan: parseInt(req.body.id_ruangan),
       urutan_meja: req.body.urutan_meja,
@@ -358,7 +356,7 @@ const statistikDataKomputer = async (req, res) => {
       
       SELECT ? AS tahun, MonthsList.m AS bulan, MONTHNAME(STR_TO_DATE(CONCAT(MonthsList.m, ' 1'), '%m %d')) AS nama_bulan, COALESCE(COUNT(k.created_at), 0) AS jumlah_komputer
       FROM MonthsList
-      LEFT JOIN komputer k ON MONTH(k.created_at) = MonthsList.m AND YEAR(k.created_at) = ? AND k.kondisi = ?
+      LEFT JOIN komputer k ON MONTH(k.created_at) = MonthsList.m AND YEAR(k.created_at) = ? AND k.kondisi = ? AND k.jenis = 'Komputer '
       GROUP BY MonthsList.m;
       `;
       db.query(

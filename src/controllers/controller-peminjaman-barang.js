@@ -2,39 +2,39 @@ const db = require('../configs/db.config');
 
 // Menampilkan semua data
 const getDataPeminjamanBarang = async (req, res) => {
+  const jenis = req.query.jenis || '';
   try {
     const data = await new Promise((resolve, reject) => {
       const queryPeminjamanRuangan = `SELECT 
       pb.id,
       pb.peminjam,
       pb.instansi,
-      pb.id_barang_pendukung,
-      bp.nama_barang,
-      m_bp.nama_merk AS merk_bp,
-      tb_bp.tipe_barang AS tipe_barang_bp,
-      bp.id_ruangan AS id_ruangan_bp,
-      r_bp.nama_ruangan AS nama_ruangan_bp,
       pb.id_komputer,
-      m_k.nama_merk AS nama_merk_k,
-      tb_k.tipe_barang AS tipe_barang_k,
+      k.id_merk,
+      m.nama_merk, 
+      k.id_tipe,
+      tb.tipe_barang,
       k.id_ruangan,
-      r_k.nama_ruangan AS nama_ruangan_k,
+      r.nama_ruangan,
+      k.spek,
+      k.jenis,
       k.urutan_meja,
       pb.tgl_peminjaman,
       pb.tgl_kembali,
       pb.status_peminjaman,
       pb.created_at,
       pb.updated_at
-  FROM peminjaman_barang pb
-  LEFT JOIN komputer k ON pb.id_komputer = k.id
-  LEFT JOIN barang_pendukung bp ON pb.id_barang_pendukung = bp.id
-  LEFT JOIN ruangan r_k ON k.id_ruangan = r_k.id
-  LEFT JOIN ruangan r_bp ON bp.id_ruangan = r_bp.id
-  LEFT JOIN tipe_barang tb_k ON k.id_tipe = tb_k.id
-  LEFT JOIN tipe_barang tb_bp ON bp.id_tipe_barang = tb_bp.id
-  LEFT JOIN merk m_k ON k.id_merk = m_k.id
-  LEFT JOIN merk m_bp ON bp.id_merk = m_bp.id;`;
-      db.query(queryPeminjamanRuangan, function (error, rows) {
+    FROM peminjaman_barang pb 
+    JOIN komputer k ON
+      pb.id_komputer = k.id
+    JOIN merk m ON
+      k.id_merk = m.id
+    JOIN tipe_barang tb  ON
+      k.id_tipe = tb.id
+    JOIN ruangan r ON
+      k.id_ruangan = r.id
+    WHERE k.jenis LIKE ?`;
+      db.query(queryPeminjamanRuangan, [`%${jenis}%`], function (error, rows) {
         if (error) {
           reject(error);
         } else {
@@ -42,38 +42,12 @@ const getDataPeminjamanBarang = async (req, res) => {
         }
       });
     });
-    const nestedData = data.map((item) => ({
-      id: item.id,
-      nama_peminjam: item.peminjam,
-      instansi: item.instansi,
-      barang_pendukung: {
-        id_barang_pendukung: item.id_barang_pendukung,
-        nama_barang: item.nama_barang,
-        tipe_barang: item.tipe_barang_bp,
-        nama_merk: item.merk_bp,
-        id_ruangan: item.id_ruangan_bp,
-        nama_ruangan: item.nama_ruangan_bp,
-      },
-      komputer: {
-        id_komputer: item.id_komputer,
-        nama_merk: item.nama_merk_k,
-        tipe_barang: item.tipe_barang_k,
-        id_ruangan: item.id_ruangan,
-        nama_ruangan: item.nama_ruangan_k,
-        urutan_meja: item.urutan_meja,
-      },
-      tgl_peminjaman: item.tgl_peminjaman,
-      tgl_kembali: item.tgl_kembali,
-      status_peminjaman: item.status_peminjaman,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-    }));
 
     if (data) {
       res.status(200).send({
         code: 200,
         status: 'OK',
-        data: nestedData,
+        data: data,
       });
     } else {
       res.status(400).send({
@@ -97,32 +71,30 @@ const getSingleDataPeminjamanBarang = async (req, res) => {
     pb.id,
     pb.peminjam,
     pb.instansi,
-    pb.id_barang_pendukung,
-    bp.nama_barang,
-    m_bp.nama_merk AS merk_bp,
-    tb_bp.tipe_barang AS tipe_barang_bp,
-    bp.id_ruangan AS id_ruangan_bp,
-    r_bp.nama_ruangan AS nama_ruangan_bp,
     pb.id_komputer,
-    m_k.nama_merk AS nama_merk_k,
-    tb_k.tipe_barang AS tipe_barang_k,
+    k.id_merk,
+    m.nama_merk, 
+    k.id_tipe,
+    tb.tipe_barang,
     k.id_ruangan,
-    r_k.nama_ruangan AS nama_ruangan_k,
+    r.nama_ruangan,
+    k.spek,
+    k.jenis,
     k.urutan_meja,
     pb.tgl_peminjaman,
     pb.tgl_kembali,
     pb.status_peminjaman,
     pb.created_at,
     pb.updated_at
-FROM peminjaman_barang pb
-LEFT JOIN komputer k ON pb.id_komputer = k.id
-LEFT JOIN barang_pendukung bp ON pb.id_barang_pendukung = bp.id
-LEFT JOIN ruangan r_k ON k.id_ruangan = r_k.id
-LEFT JOIN ruangan r_bp ON bp.id_ruangan = r_bp.id
-LEFT JOIN tipe_barang tb_k ON k.id_tipe = tb_k.id
-LEFT JOIN tipe_barang tb_bp ON bp.id_tipe_barang = tb_bp.id
-LEFT JOIN merk m_k ON k.id_merk = m_k.id
-LEFT JOIN merk m_bp ON bp.id_merk = m_bp.id
+  FROM peminjaman_barang pb 
+  JOIN komputer k ON
+    pb.id_komputer = k.id
+  JOIN merk m ON
+    k.id_merk = m.id
+  JOIN tipe_barang tb  ON
+    k.id_tipe = tb.id
+  JOIN ruangan r ON
+    k.id_ruangan = r.id
 WHERE pb.id = ?`;
     const data = await new Promise((resolve, reject) => {
       db.query(selectRuanganByIdQuery, [id], function (error, rows) {
@@ -164,7 +136,7 @@ WHERE pb.id = ?`;
       res.status(200).send({
         code: 200,
         status: 'OK',
-        data: nestedData[0],
+        data: data[0],
       });
     } else if (data.length === 0) {
       res.status(200).send({
@@ -196,7 +168,6 @@ const addDataPeminjamanBarang = async (req, res) => {
     let dataPeminjamanBarang = {
       peminjam: req.body.peminjam,
       instansi: req.body.instansi,
-      id_barang_pendukung: parseInt(req.body.id_barang_pendukung) || null,
       id_komputer: parseInt(req.body.id_komputer) || null,
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
@@ -268,7 +239,6 @@ const editDataPeminjamanBarang = async (req, res) => {
     const editDataPeminjamanBarang = {
       peminjam: req.body.peminjam,
       instansi: req.body.instansi,
-      id_barang_pendukung: parseInt(req.body.id_barang_pendukung) || null,
       id_komputer: parseInt(req.body.id_komputer) || null,
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
@@ -387,8 +357,43 @@ const deleteDataPeminjamanBarang = async (req, res) => {
   }
 };
 
+const getDataUntukDiPinjam = async (req, res) => {
+  try {
+    const data = await new Promise((resolve, reject) => {
+      const queryDataUntukDiPinjam = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe, tipe_barang.tipe_barang, komputer.spek, komputer.jenis,komputer.kondisi, ruangan.id AS id_ruangan, ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id`;
+      db.query(queryDataUntukDiPinjam, function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(rows);
+        }
+      });
+    });
+
+    if (data) {
+      res.status(200).send({
+        code: 200,
+        status: 'OK',
+        data: data,
+      });
+    } else {
+      res.status(400).send({
+        code: 400,
+        status: 'BAD_REQUEST',
+      });
+    }
+  } catch (error) {
+    res.status(500).send({
+      code: 500,
+      status: 'INTERNAL_SERVER_ERROR',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getDataPeminjamanBarang,
+  getDataUntukDiPinjam,
   getSingleDataPeminjamanBarang,
   addDataPeminjamanBarang,
   editDataPeminjamanBarang,

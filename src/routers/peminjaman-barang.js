@@ -3,6 +3,8 @@ const { peminjamanBarang } = require('../controllers');
 
 router.get('/', peminjamanBarang.getDataPeminjamanBarang); // Path untuk melihat
 
+router.get('/data', peminjamanBarang.getDataUntukDiPinjam); // Path untuk melihat
+
 router.get('/:id', peminjamanBarang.getSingleDataPeminjamanBarang); // Path untuk melihat
 
 router.post('/', peminjamanBarang.addDataPeminjamanBarang); // Path untuk menambah data

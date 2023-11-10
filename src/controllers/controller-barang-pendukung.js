@@ -1,152 +1,79 @@
-const { log } = require('util');
 const db = require('../configs/db.config');
 
 // Menampilkan semua data
 const getDataBarangPendukung = async (req, res) => {
-  try {
-    const kondisi = req.query.kondisi || 0;
-    const page = parseInt(req.query.page) || 0;
-    const limit = parseInt(req.query.limit) || 10;
-    const search = req.query.search_query || '';
-    const offset = page * limit;
+  const tipe = req.query.tipe || 0;
+  const kondisi = req.query.kondisi || 0;
+  const page = parseInt(req.query.page) || 0;
+  const limit = parseInt(req.query.limit) || 10;
+  const search = req.query.search_query || '';
+  const offset = page * limit;
 
-    const totalRows = await new Promise((resolve, reject) => {
-      const countBarangPendkungQuery = `SELECT
-      COUNT(*)
-    FROM
-      barang_pendukung
-    JOIN merk ON
-      barang_pendukung.id_merk = merk.id
-    JOIN tipe_barang ON
-      barang_pendukung.id_tipe_barang = tipe_barang.id
-    WHERE
-      barang_pendukung.kondisi = ?
-      AND (tipe_barang.tipe_barang LIKE ?
-        OR merk.nama_merk LIKE ?
-        OR barang_pendukung.nama_barang LIKE ?);`;
+  const totalRows = await new Promise((resolve, reject) => {
+    const countBarangPendukungQuery = `SELECT COUNT(*) FROM komputer JOIN merk m ON id_merk = m.id JOIN ruangan r ON id_ruangan = r.id JOIN tipe_barang tb ON id_tipe = tb.id WHERE komputer.jenis = 'Barang Pendukung' AND tb.tipe_barang = ? AND komputer.kondisi =  ? AND (r.nama_ruangan LIKE ? OR m.nama_merk LIKE ?)`;
 
-      db.query(
-        countBarangPendkungQuery,
-        [kondisi, `%${search}%`, `%${search}%`, `%${search}%`],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(rows[0]['COUNT(*)']);
-          }
+    db.query(
+      countBarangPendukungQuery,
+      [tipe, kondisi, `%${search}%`, `%${search}%`],
+      function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(rows[0]['COUNT(*)']);
         }
-      );
-    });
+      }
+    );
+  });
 
-    const totalPage = Math.ceil(totalRows / limit);
+  const totalPage = Math.ceil(totalRows / limit);
 
-    const data = await new Promise((resolve, reject) => {
-      const queryGetDataKomputer = `SELECT
-      barang_pendukung.id,
-      barang_pendukung.nama_barang,
-      barang_pendukung.id_tipe_barang,
-      tipe_barang.tipe_barang,
-      barang_pendukung.id_merk,
-      merk.nama_merk,
-      barang_pendukung.kondisi,
-      barang_pendukung.keterangan,
-      barang_pendukung.id_ruangan,
-      ruangan.nama_ruangan,
-      barang_pendukung.created_at,
-      barang_pendukung.updated_at
-    FROM
-      barang_pendukung
-    JOIN merk ON
-      id_merk = merk.id
-    JOIN tipe_barang ON
-      id_tipe_barang = tipe_barang.id
-    JOIN ruangan ON 
-      id_ruangan = ruangan.id
-    WHERE
-      barang_pendukung.kondisi = ?
-      AND (tipe_barang.tipe_barang LIKE ?
-        OR merk.nama_merk LIKE ?
-        OR barang_pendukung.nama_barang LIKE ?)
-    ORDER BY
-      barang_pendukung.id DESC
-    LIMIT ? OFFSET ?;`;
-      db.query(
-        queryGetDataKomputer,
-        [kondisi, `%${search}%`, `%${search}%`, `%${search}%`, limit, offset],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(rows);
-          }
+  const data = await new Promise((resolve, reject) => {
+    const getBarangPendukungQuery = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe, tipe_barang.tipe_barang, komputer.spek, komputer.jenis, komputer.kondisi, ruangan.id AS id_ruangan, ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id WHERE komputer.jenis = 'Barang Pendukung' AND tipe_barang.tipe_barang = ? AND komputer.kondisi = ? AND (ruangan.nama_ruangan LIKE ? OR merk.nama_merk LIKE ?) ORDER BY komputer.id DESC LIMIT ? OFFSET ?`;
+
+    db.query(
+      getBarangPendukungQuery,
+      [tipe, kondisi, `%${search}%`, `%${search}%`, limit, offset],
+      function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(rows);
         }
-      );
-    });
+      }
+    );
+  });
 
-    if (data) {
-      res.status(200).send({
-        code: 200,
-        status: 'OK',
-        data: data,
-      });
-    } else {
-      res.status(400).send({
-        code: 400,
-        status: 'BAD_REQUEST',
-      });
-    }
-  } catch (error) {
-    res.status(500).send({
-      code: 500,
-      status: 'INTERNAL_SERVER_ERROR',
-      error: error.message,
+  if (data) {
+    res.send({
+      code: 200,
+      status: 'OK',
+      data: data,
+      count: totalRows,
+      totalPage: totalPage,
+    });
+  } else {
+    res.send({
+      code: 400,
+      status: 'BAD_REQUEST',
     });
   }
 };
 
-// Mengambil Single Data
 const getSingleDataBarangPendukung = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const data = await new Promise((resolve, reject) => {
-      const queryEditDataBarangPendukung = `SELECT
-      barang_pendukung.id,
-      barang_pendukung.nama_barang,
-      barang_pendukung.id_tipe_barang,
-      tipe_barang.tipe_barang,
-      barang_pendukung.id_merk,
-      merk.nama_merk,
-      barang_pendukung.kondisi,
-      barang_pendukung.keterangan,
-      barang_pendukung.id_ruangan,
-      ruangan.nama_ruangan,
-      barang_pendukung.created_at,
-      barang_pendukung.updated_at
-    FROM
-      barang_pendukung
-    JOIN merk ON
-      id_merk = merk.id
-    JOIN tipe_barang ON
-      id_tipe_barang = tipe_barang.id
-    JOIN ruangan ON 
-      id_ruangan = ruangan.id
-    WHERE
-      barang_pendukung.id = ?
-    ;`
-      db.query(
-        queryEditDataBarangPendukung,
-        [id],
-        function (error, rows) {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(rows);
-          }
+      const query = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe_barang, tipe_barang.tipe_barang, komputer.spek, komputer.jenis, komputer.kondisi, ruangan.id AS id_ruangan ,ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id WHERE komputer.jenis = 'Barang Pendukung' AND komputer.id = ?;`;
+      db.query(query, [id], function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(rows);
         }
-      );
+      });
     });
 
-    if (data.length !== 0) {
+    if (data && data.length > 0) {
       res.status(200).send({
         code: 200,
         status: 'OK',
@@ -156,14 +83,14 @@ const getSingleDataBarangPendukung = async (req, res) => {
       res.status(200).send({
         code: 200,
         status: 'OK',
-        message: 'Data yang dicari tidak ditemukan',
+        message: 'Data yang anda cari tidak ditemukan',
       });
     } else {
       res.status(400).send({
         code: 400,
         status: 'BAD_REQUEST',
         error: {
-          id: ['Silahkan cek kembali id produk'],
+          id: ['Silahkan cek kembali id barang pendukung'],
         },
       });
     }
@@ -176,21 +103,22 @@ const getSingleDataBarangPendukung = async (req, res) => {
   }
 };
 
-// Menambahkan data
+// Menambahkan data produk
 const addDataBarangPendukung = async (req, res) => {
   try {
-    let dataBarangPendukung = {
-      nama_barang: req.body.nama_barang,
-      id_tipe_barang: parseInt(req.body.id_tipe_barang),
+    const dataBarangPendukung = {
       id_merk: parseInt(req.body.id_merk),
+      id_tipe: parseInt(req.body.id_tipe),
+      spek: req.body.spek,
+      jenis: req.body.jenis || 'Barang Pendukung',
       kondisi: req.body.kondisi,
-      keterangan: req.body.keterangan,
-      id_ruangan: req.body.id_ruangan,
+      id_ruangan: parseInt(req.body.id_ruangan),
+      urutan_meja: req.body.urutan_meja || null,
     };
 
     const result = await new Promise((resolve, reject) => {
       db.query(
-        'INSERT INTO barang_pendukung SET ?;',
+        'INSERT INTO komputer SET ?;',
         [dataBarangPendukung],
         function (error, rows) {
           if (error) {
@@ -212,7 +140,47 @@ const addDataBarangPendukung = async (req, res) => {
       res.status(400).send({
         code: 400,
         status: 'BAD_REQUEST',
-        errors: {},
+        errors: {
+          id_merk: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data integer',
+            'Pastikan data sama dengan yang ada di tabel merk',
+          ],
+          id_tipe: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data integer',
+            'Pastikan data sama dengan yang ada di tabel tipe',
+          ],
+          spek: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data string',
+            'Jangan gunakan integer',
+          ],
+          kondisi: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data string',
+            'Jangan gunakan string',
+            'Perhatikan kembali besar kecil',
+          ],
+          id_ruangan: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data integer',
+            'Jangan gunakan string',
+            'Sesuaikan dengan data yang ada di tabel ruangan',
+          ],
+          urutan_meja: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data integer',
+            'Jangan gunakan string',
+            'Sesuaikan dengan data yang ada ruangan',
+          ],
+        },
       });
     }
   } catch (error) {
@@ -228,19 +196,19 @@ const addDataBarangPendukung = async (req, res) => {
 const editDataBarangPendukung = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
-
-    let dataBarangPendukungEdit = {
-      nama_barang: req.body.nama_barang,
-      id_tipe_barang: parseInt(req.body.id_tipe_barang),
+    const dataBarangPendukungEdit = {
       id_merk: parseInt(req.body.id_merk),
+      id_tipe: parseInt(req.body.id_tipe),
+      spek: req.body.spek,
+      jenis: req.body.jenis || 'Barang Pendukung',
       kondisi: req.body.kondisi,
-      keterangan: req.body.keterangan,
-      id_ruangan: req.body.id_ruangan,
+      id_ruangan: parseInt(req.body.id_ruangan),
+      urutan_meja: req.body.urutan_meja || null,
     };
 
     const result = await new Promise((resolve, reject) => {
       db.query(
-        'UPDATE barang_pendukung SET ? WHERE id = ?;',
+        'UPDATE komputer SET ? WHERE id = ?;',
         [dataBarangPendukungEdit, id],
         function (error, rows) {
           if (error) {
@@ -266,11 +234,44 @@ const editDataBarangPendukung = async (req, res) => {
         code: 400,
         status: 'BAD_REQUEST',
         errors: {
-          nama_merk: [
-            'Harus menggunakan tipe data string',
-            'Data tidak boleh kosong',
-            'Data tidak boleh berisikan tipe data null',
-            'Perhatikan kembali huruf besar kecil',
+          id_merk: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data integer',
+            'Pastikan data sama dengan yang ada di tabel merk',
+          ],
+          id_tipe: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data integer',
+            'Pastikan data sama dengan yang ada di tabel tipe',
+          ],
+          spek: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data string',
+            'Jangan gunakan integer',
+          ],
+          kondisi: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data string',
+            'Jangan gunakan string',
+            'Perhatikan kembali besar kecil',
+          ],
+          id_ruangan: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data integer',
+            'Jangan gunakan string',
+            'Sesuaikan dengan data yang ada di tabel ruangan',
+          ],
+          urutan_meja: [
+            'Tidak boleh kosong',
+            'Tidak boleh berisikan data null',
+            'Gunakan tipe data integer',
+            'Jangan gunakan string',
+            'Sesuaikan dengan data yang ada ruangan',
           ],
         },
       });
@@ -284,14 +285,14 @@ const editDataBarangPendukung = async (req, res) => {
   }
 };
 
-// Delete Data
+// Delete Data Produk
 const deleteDataBarangPendukung = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
 
     const result = await new Promise((resolve, reject) => {
       db.query(
-        'DELETE FROM barang_pendukung WHERE id = ?;',
+        'DELETE FROM komputer WHERE id = ?;',
         [id],
         function (error, rows) {
           if (error) {
