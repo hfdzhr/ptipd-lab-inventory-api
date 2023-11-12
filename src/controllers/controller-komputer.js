@@ -345,23 +345,25 @@ const statistikDataKomputer = async (req, res) => {
     const tahun = parseInt(req.query.tahun) || currentYear;
 
     const result = await new Promise((resolve, reject) => {
-      const queryStatistikKomputer = `
-      WITH RECURSIVE MonthsList AS (
+      const queryStatistikKomputer = `WITH RECURSIVE MonthsList AS (
         SELECT 1 AS m
         UNION ALL
         SELECT m + 1
         FROM MonthsList
         WHERE m < 12
-      )
-      
-      SELECT ? AS tahun, MonthsList.m AS bulan, MONTHNAME(STR_TO_DATE(CONCAT(MonthsList.m, ' 1'), '%m %d')) AS nama_bulan, COALESCE(COUNT(k.created_at), 0) AS jumlah_komputer
-      FROM MonthsList
-      LEFT JOIN komputer k ON MONTH(k.created_at) = MonthsList.m AND YEAR(k.created_at) = ? AND k.kondisi = ? AND k.jenis = 'Komputer '
-      GROUP BY MonthsList.m;
-      `;
+    )
+    
+    SELECT ? AS tahun, 
+           MonthsList.m AS bulan, 
+           DATE_FORMAT(CONCAT(?, '-', MonthsList.m, '-01'), '%M') AS nama_bulan,
+           COALESCE(COUNT(k.created_at), 0) AS jumlah_komputer
+    FROM MonthsList
+    LEFT JOIN komputer k ON MONTH(k.created_at) = MonthsList.m AND YEAR(k.created_at) = ? AND k.kondisi = ? AND k.jenis = 'Komputer'
+    GROUP BY MonthsList.m;;
+    `;
       db.query(
         queryStatistikKomputer,
-        [tahun, tahun, kondisiKomputer],
+        [tahun, tahun, tahun, kondisiKomputer],
         function (error, rows) {
           if (error) {
             reject(error);
