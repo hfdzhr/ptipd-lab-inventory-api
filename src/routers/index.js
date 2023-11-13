@@ -18,29 +18,41 @@ router.use(cors());
 
 router.use('/users', routerUsers);
 
-router.use('/ruangan', checkRole('admin'), routerRuangan);
+router.use('/ruangan', checkRole(['admin']), routerRuangan);
 
 router.use(
   '/peminjaman-ruangan',
-  checkRole('admin'),
+  checkRole(['admin']),
   routerPeminjamanRuangan
 );
 
-router.use('/merk', checkRole('admin'), routerMerk);
+router.use('/merk', checkRole(['admin']), routerMerk);
 
-router.use('/tipe-barang', checkRole('admin'), routerTipeBarang);
+router.use('/tipe-barang', checkRole(['admin']), routerTipeBarang);
 
-router.use('/komputer', checkRole('admin'), routerKomputer);
+router.use('/komputer', checkRole(['admin']), routerKomputer);
 
-router.use('/barang-pendukung', checkRole('admin'), routerBarangPendukung);
+router.use('/barang-pendukung', checkRole(['admin']), routerBarangPendukung);
 
-router.use('/dashboard',checkRole('admin'), routerDashboard);
+router.use('/dashboard', checkRole(['admin']), routerDashboard);
 
-router.use('/peminjaman-barang', checkRole('admin' || 'user'), routerPeminjamanBarang);
+router.use(
+  '/peminjaman-barang',
+  checkRole(['admin', 'user']),
+  routerPeminjamanBarang
+);
 
-router.use('/jadwal-maintenance', checkRole('admin' || 'user'), routerJadwalMaintenance);
+router.use(
+  '/jadwal-maintenance',
+  checkRole(['admin', 'user']),
+  routerJadwalMaintenance
+);
 
-router.use('/perbaikan-komputer', checkRole('admin'), routerPerbaikanKomputer);
+router.use(
+  '/perbaikan-komputer',
+  checkRole(['admin']),
+  routerPerbaikanKomputer
+);
 
 router.get('/', (req, res) => {
   res.status(200).json({

@@ -17,16 +17,13 @@ const getDataJadwalMaintenance = async (req, res) => {
   JOIN ruangan r ON 
     id_ruangan = r.id`;
 
-    db.query(
-      countJadwalMaintenanceQuery,
-      function (error, rows) {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(rows[0]['COUNT(*)']);
-        }
+    db.query(countJadwalMaintenanceQuery, function (error, rows) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(rows[0]['COUNT(*)']);
       }
-    );
+    });
   });
 
   const data = await new Promise((resolve, reject) => {
@@ -43,16 +40,13 @@ const getDataJadwalMaintenance = async (req, res) => {
   JOIN ruangan r ON 
     id_ruangan = r.id`;
 
-    db.query(
-      getJadwalMaintenanceQuery,
-      function (error, rows) {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(rows);
-        }
+    db.query(getJadwalMaintenanceQuery, function (error, rows) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(rows);
       }
-    );
+    });
   });
 
   if (data) {
@@ -77,15 +71,14 @@ const getSingleDataJadwalMaintenance = async (req, res) => {
       let getJadwalMaintenanceQuery = `SELECT 
     jm.id,
     jm.nama,
-    r.id_ruangan,
+    jm.id_ruangan,
     r.nama_ruangan,
     jm.tanggal_mulai,
     jm.tanggal_berakhir
   FROM jadwal_maintenance jm
   JOIN ruangan r ON 
     id_ruangan = r.id
-  WHERE jm.id = ?`
-    ;
+  WHERE jm.id = ?`;
       db.query(getJadwalMaintenanceQuery, [id], function (error, rows) {
         if (error) {
           reject(error);
@@ -368,7 +361,7 @@ const deleteDataJadwalMaintenance = async (req, res) => {
 //         FROM MonthsList
 //         WHERE m < 12
 //       )
-      
+
 //       SELECT ? AS tahun, MonthsList.m AS bulan, MONTHNAME(STR_TO_DATE(CONCAT(MonthsList.m, ' 1'), '%m %d')) AS nama_bulan, COALESCE(COUNT(k.created_at), 0) AS jumlah_komputer
 //       FROM MonthsList
 //       LEFT JOIN komputer k ON MONTH(k.created_at) = MonthsList.m AND YEAR(k.created_at) = ? AND k.kondisi = ?

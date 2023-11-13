@@ -484,7 +484,7 @@ function generateToken() {
 }
 
 // Function Checkrole
-function checkRole(role) {
+function checkRole(allowedRoles) {
   return (req, res, next) => {
     const tokenHeader = req.headers.authorization;
 
@@ -525,9 +525,10 @@ function checkRole(role) {
           const userIsVerifed = parseInt(results[0].is_verified);
           const emailUser = results[0].email;
 
-          if (userRole === role && userIsVerifed === 1) {
+          // Mengecek apakah peran pengguna termasuk dalam peran yang diizinkan
+          if (allowedRoles.includes(userRole) && userIsVerifed === 1) {
             next();
-          } else if (userRole === role && userIsVerifed === 0) {
+          } else if (allowedRoles.includes(userRole) && userIsVerifed === 0) {
             return res.status(403).json({
               code: 403,
               status: 'FORBIDDEN',
@@ -545,6 +546,7 @@ function checkRole(role) {
     });
   };
 }
+
 
 module.exports = {
   registerDataUser,
