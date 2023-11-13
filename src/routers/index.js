@@ -36,9 +36,9 @@ router.use('/barang-pendukung', checkRole('admin'), routerBarangPendukung);
 
 router.use('/dashboard',checkRole('admin'), routerDashboard);
 
-router.use('/peminjaman-barang', checkRole('admin'), routerPeminjamanBarang);
+router.use('/peminjaman-barang', checkRole('admin' || 'user'), routerPeminjamanBarang);
 
-router.use('/jadwal-maintenance', checkRole('admin'), routerJadwalMaintenance);
+router.use('/jadwal-maintenance', checkRole('admin' || 'user'), routerJadwalMaintenance);
 
 router.use('/perbaikan-komputer', checkRole('admin'), routerPerbaikanKomputer);
 
