@@ -18,7 +18,7 @@ router.use(cors());
 
 router.use('/users', routerUsers);
 
-router.use('/ruangan', checkRole(['admin']), routerRuangan);
+router.use('/ruangan', checkRole(['admin', 'user']), routerRuangan);
 
 router.use(
   '/peminjaman-ruangan',
@@ -30,7 +30,7 @@ router.use('/merk', checkRole(['admin']), routerMerk);
 
 router.use('/tipe-barang', checkRole(['admin']), routerTipeBarang);
 
-router.use('/komputer', checkRole(['admin']), routerKomputer);
+router.use('/komputer', checkRole(['admin', 'user']), routerKomputer);
 
 router.use('/barang-pendukung', checkRole(['admin']), routerBarangPendukung);
 

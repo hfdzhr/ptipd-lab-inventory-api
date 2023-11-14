@@ -8,7 +8,7 @@ function checkAndDeleteToken() {
       
       if (decodedToken.exp < currentTimestamp) {
           // Jika token sudah kedaluwarsa, hapus token dari penyimpanan lokal
-          alert('Token sudah kedaluwarsa. Harap login ulang.');
+          console.log('Token sudah kedaluwarsa. Harap login ulang.');
           // Tambahkan logika lainnya seperti redireksi ke halaman login
       } 
   }
