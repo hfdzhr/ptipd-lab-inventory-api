@@ -127,7 +127,7 @@ const getDataUsers = async (req, res) => {
   const data = await new Promise((resolve, reject) => {
     let getJadwalMaintenanceQuery = `
     SELECT
-	u.id_user AS id,
+	u.id_user,
 	u.name,
 	u.email,
 	u.instansi,
@@ -135,11 +135,11 @@ const getDataUsers = async (req, res) => {
 FROM
 	users u
 WHERE
-	name LIKE ? OR instansi LIKE ?;`;
+	u.name LIKE ? OR u.instansi LIKE ? OR u.email LIKE ? OR u.role LIKE ?;`;
 
     db.query(
       getJadwalMaintenanceQuery,
-      [`%${search}%`, `%${search}%`],
+      [`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`],
       function (error, rows) {
         if (error) {
           reject(error);

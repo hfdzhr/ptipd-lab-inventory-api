@@ -27,6 +27,7 @@ const getDataJadwalMaintenance = async (req, res) => {
   });
 
   const data = await new Promise((resolve, reject) => {
+    const search = req.query.search_query || '';
     let getJadwalMaintenanceQuery = `SELECT 
     jm.id,
     jm.nama,
@@ -38,9 +39,10 @@ const getDataJadwalMaintenance = async (req, res) => {
     jm.updated_at 
   FROM jadwal_maintenance jm
   JOIN ruangan r ON 
-    id_ruangan = r.id`;
+    id_ruangan = r.id
+  WHERE r.nama_ruangan LIKE ? OR jm.nama LIKE ?`;
 
-    db.query(getJadwalMaintenanceQuery, function (error, rows) {
+    db.query(getJadwalMaintenanceQuery,[`%${search}%`, `%${search}%`], function (error, rows) {
       if (error) {
         reject(error);
       } else {

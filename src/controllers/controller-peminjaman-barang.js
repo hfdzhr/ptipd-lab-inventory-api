@@ -1,8 +1,10 @@
 const db = require('../configs/db.config');
+const fs = require('fs');
 
 // Menampilkan semua data
 const getDataPeminjamanBarang = async (req, res) => {
   const jenis = req.query.jenis || '';
+  const search = req.query.search_query || '';
   try {
     const data = await new Promise((resolve, reject) => {
       const queryPeminjamanRuangan = `SELECT 
@@ -22,6 +24,8 @@ const getDataPeminjamanBarang = async (req, res) => {
       pb.tgl_peminjaman,
       pb.tgl_kembali,
       pb.status_peminjaman,
+      pb.nama_file,
+      pb.file,
       pb.created_at,
       pb.updated_at
     FROM peminjaman_barang pb 
@@ -33,8 +37,8 @@ const getDataPeminjamanBarang = async (req, res) => {
       k.id_tipe = tb.id
     JOIN ruangan r ON
       k.id_ruangan = r.id
-    WHERE k.jenis LIKE ?`;
-      db.query(queryPeminjamanRuangan, [`%${jenis}%`], function (error, rows) {
+    WHERE k.jenis LIKE ? AND (m.nama_merk LIKE ? OR r.nama_ruangan LIKE ? OR k.spek LIKE ? OR k.urutan_meja LIKE ? OR pb.peminjam LIKE ?)`;
+      db.query(queryPeminjamanRuangan, [`%${jenis}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`,`%${search}%`], function (error, rows) {
         if (error) {
           reject(error);
         } else {
@@ -165,6 +169,20 @@ WHERE pb.id = ?`;
 // Menambahkan data produk
 const addDataPeminjamanBarang = async (req, res) => {
   try {
+    let url = null;
+    let fileName = null;
+    if (req.files && req.files.file) {
+      const file = req.files.file;
+      fileName = file.name;
+      url = `${req.protocol}://${req.get('host')}/dokumen/${fileName}`;
+
+      file.mv(`./public/dokumen/${fileName}`, async (err) => {
+        if (err) {
+          throw new Error('Gagal menyimpan file');
+        }
+      });
+    }
+
     let dataPeminjamanBarang = {
       peminjam: req.body.peminjam,
       instansi: req.body.instansi,
@@ -172,6 +190,8 @@ const addDataPeminjamanBarang = async (req, res) => {
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
       status_peminjaman: req.body.status_peminjaman,
+      nama_file: fileName,
+      file: url,
     };
 
     const result = await new Promise((resolve, reject) => {
@@ -236,6 +256,45 @@ const addDataPeminjamanBarang = async (req, res) => {
 const editDataPeminjamanBarang = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+
+    const ruangan = await new Promise((resolve, reject) => {
+      db.query(
+        'SELECT * FROM peminjaman_barang WHERE id = ?',
+        [id],
+        function (error, rows) {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(rows[0]); // Ambil data pertama dari hasil query
+          }
+        }
+      );
+    });
+
+    let url = null;
+    let fileName = null;
+
+    if (req.files && req.files.file) {
+      const file = req.files.file;
+      fileName = file.name;
+      url = `${req.protocol}://${req.get('host')}/dokumen/${fileName}`;
+
+      const filepath = `./public/dokumen/${ruangan.nama_file}`;
+      if (ruangan.nama_file) {
+        fs.unlinkSync(filepath); // Hapus file hanya jika nama_file tersedia
+      }
+
+      await new Promise((resolve, reject) => {
+        file.mv(`./public/dokumen/${fileName}`, (err) => {
+          if (err) {
+            reject(new Error('Gagal menyimpan file'));
+          } else {
+            resolve();
+          }
+        });
+      });
+    }
+
     const editDataPeminjamanBarang = {
       peminjam: req.body.peminjam,
       instansi: req.body.instansi,
@@ -243,6 +302,8 @@ const editDataPeminjamanBarang = async (req, res) => {
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
       status_peminjaman: req.body.status_peminjaman,
+      nama_file: fileName,
+      file: url,
     };
 
     const result = await new Promise((resolve, reject) => {
@@ -310,6 +371,25 @@ const editDataPeminjamanBarang = async (req, res) => {
 const deleteDataPeminjamanBarang = async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+
+    const ruangan = await new Promise((resolve, reject) => {
+      db.query(
+        'SELECT * FROM peminjaman_barang WHERE id = ?',
+        [id],
+        function (error, rows) {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(rows[0]); // Ambil data pertama dari hasil query
+          }
+        }
+      );
+    });
+
+    const filepath = `./public/dokumen/${ruangan.nama_file}`;
+    if (ruangan.nama_file) {
+      fs.unlinkSync(filepath); // Hapus file hanya jika nama_file tersedia
+    }
 
     const result = await new Promise((resolve, reject) => {
       db.query(

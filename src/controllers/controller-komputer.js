@@ -342,6 +342,7 @@ const statistikDataKomputer = async (req, res) => {
     const today = new Date();
     const currentYear = today.getFullYear();
     const kondisiKomputer = req.query.kondisi || 0;
+    const idRuangan = req.query.id_ruangan || 0;
     const tahun = parseInt(req.query.tahun) || currentYear;
 
     const result = await new Promise((resolve, reject) => {
@@ -358,12 +359,12 @@ const statistikDataKomputer = async (req, res) => {
            DATE_FORMAT(CONCAT(?, '-', MonthsList.m, '-01'), '%M') AS nama_bulan,
            COALESCE(COUNT(k.created_at), 0) AS jumlah_komputer
     FROM MonthsList
-    LEFT JOIN komputer k ON MONTH(k.created_at) = MonthsList.m AND YEAR(k.created_at) = ? AND k.kondisi = ? AND k.jenis = 'Komputer'
+    LEFT JOIN komputer k ON MONTH(k.created_at) = MonthsList.m AND YEAR(k.created_at) = ? AND k.kondisi = ? AND k.jenis = 'Komputer' AND k.id_ruangan = ?
     GROUP BY MonthsList.m;;
     `;
       db.query(
         queryStatistikKomputer,
-        [tahun, tahun, tahun, kondisiKomputer],
+        [tahun, tahun, tahun, kondisiKomputer, idRuangan],
         function (error, rows) {
           if (error) {
             reject(error);

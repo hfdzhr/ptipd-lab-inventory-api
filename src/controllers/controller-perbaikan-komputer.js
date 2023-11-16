@@ -1,6 +1,7 @@
 const db = require('../configs/db.config');
 
 const getDataPerbaikanKomputer = async (req, res) => {
+  const search = req.query.search_query || '';
   const totalRows = await new Promise((resolve, reject) => {
     const countDataPerbaikanKomputer = `SELECT
 	COUNT(*)
@@ -23,27 +24,32 @@ JOIN komputer k ON
 	pk.id,
 	pk.id_komputer,
 	r.nama_ruangan,
-    k.urutan_meja,
+  k.urutan_meja,
 	k.kondisi,
 	pk.jenis_perbaikan,
 	pk.tanggal_mulai,
 	pk.tanggal_berakhir, 
-    pk.created_at,
-    pk.updated_at
+  pk.created_at,
+  pk.updated_at
 FROM
 	perbaikan_komputer pk 
 JOIN komputer k ON
 	pk.id_komputer = k.id
 JOIN ruangan r ON
-	k.id_ruangan = r.id;`;
+	k.id_ruangan = r.id
+WHERE r.nama_ruangan LIKE ? OR k.urutan_meja LIKE ? OR pk.jenis_perbaikan LIKE ? OR k.kondisi LIKE ?;`;
 
-    db.query(queryDataPerbaikanKomputer, function (error, rows) {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(rows);
+    db.query(
+      queryDataPerbaikanKomputer,
+      [`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`],
+      function (error, rows) {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(rows);
+        }
       }
-    });
+    );
   });
 
   if (data) {
@@ -51,7 +57,6 @@ JOIN ruangan r ON
       code: 200,
       status: 'OK',
       data: data,
-      count: totalRows,
     });
   } else {
     res.send({

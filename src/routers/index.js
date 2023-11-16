@@ -22,19 +22,23 @@ router.use('/ruangan', checkRole(['admin', 'user']), routerRuangan);
 
 router.use(
   '/peminjaman-ruangan',
-  checkRole(['admin']),
+  checkRole(['admin', 'user']),
   routerPeminjamanRuangan
 );
 
-router.use('/merk', checkRole(['admin']), routerMerk);
+router.use('/merk', checkRole(['admin', 'user']), routerMerk);
 
-router.use('/tipe-barang', checkRole(['admin']), routerTipeBarang);
+router.use('/tipe-barang', checkRole(['admin', 'user']), routerTipeBarang);
 
 router.use('/komputer', checkRole(['admin', 'user']), routerKomputer);
 
-router.use('/barang-pendukung', checkRole(['admin']), routerBarangPendukung);
+router.use(
+  '/barang-pendukung',
+  checkRole(['admin', 'user']),
+  routerBarangPendukung
+);
 
-router.use('/dashboard', checkRole(['admin']), routerDashboard);
+router.use('/dashboard', checkRole(['admin', 'user']), routerDashboard);
 
 router.use(
   '/peminjaman-barang',
@@ -50,7 +54,7 @@ router.use(
 
 router.use(
   '/perbaikan-komputer',
-  checkRole(['admin']),
+  checkRole(['admin', 'user']),
   routerPerbaikanKomputer
 );
 

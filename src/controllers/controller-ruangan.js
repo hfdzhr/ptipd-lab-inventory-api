@@ -4,10 +4,11 @@ const SQL = require('sql-template-strings');
 // Menampilkan semua data
 const getDataRuangan = async (req, res) => {
   try {
+    const search = req.query.search_query || '';
     const data = await new Promise((resolve, reject) => {
-      const selectAllRuanganQuery = SQL`SELECT * FROM ruangan`;
+      const selectAllRuanganQuery = SQL`SELECT * FROM ruangan WHERE nama_ruangan LIKE ?`;
 
-      db.query(selectAllRuanganQuery, function (error, rows) {
+      db.query(selectAllRuanganQuery, [`%${search}%`], function (error, rows) {
         if (error) {
           reject(error);
         } else {

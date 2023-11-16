@@ -3,10 +3,11 @@ const db = require('../configs/db.config');
 // Menampilkan semua data
 const getDataMerk = async (req, res) => {
   try {
+    const search = req.query.search_query || '';
     const data = await new Promise((resolve, reject) => {
-      const selectAllMerkQuery = `SELECT * FROM merk`;
+      const selectAllMerkQuery = `SELECT * FROM merk WHERE nama_merk LIKE ?`;
 
-      db.query(selectAllMerkQuery, (error, rows) => {
+      db.query(selectAllMerkQuery, [`%${search}%`], (error, rows) => {
         if (error) {
           reject(error);
         } else {

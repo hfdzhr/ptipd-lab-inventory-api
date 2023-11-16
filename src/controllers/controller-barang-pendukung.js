@@ -10,11 +10,11 @@ const getDataBarangPendukung = async (req, res) => {
   const offset = page * limit;
 
   const totalRows = await new Promise((resolve, reject) => {
-    const countBarangPendukungQuery = `SELECT COUNT(*) FROM komputer JOIN merk m ON id_merk = m.id JOIN ruangan r ON id_ruangan = r.id JOIN tipe_barang tb ON id_tipe = tb.id WHERE komputer.jenis = 'Barang Pendukung' AND tb.tipe_barang = ? AND komputer.kondisi =  ? AND (r.nama_ruangan LIKE ? OR m.nama_merk LIKE ?)`;
+    const countBarangPendukungQuery = `SELECT COUNT(*) FROM komputer JOIN merk m ON id_merk = m.id JOIN ruangan r ON id_ruangan = r.id JOIN tipe_barang tb ON id_tipe = tb.id WHERE komputer.jenis = 'Barang Pendukung' AND tb.tipe_barang = ? AND komputer.kondisi =  ? AND (r.nama_ruangan LIKE ? OR m.nama_merk LIKE ? )`;
 
     db.query(
       countBarangPendukungQuery,
-      [tipe, kondisi, `%${search}%`, `%${search}%`],
+      [tipe, kondisi, `%${search}%`, `%${search}%`, `%${search}%`],
       function (error, rows) {
         if (error) {
           reject(error);
@@ -28,11 +28,11 @@ const getDataBarangPendukung = async (req, res) => {
   const totalPage = Math.ceil(totalRows / limit);
 
   const data = await new Promise((resolve, reject) => {
-    const getBarangPendukungQuery = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe, tipe_barang.tipe_barang, komputer.spek, komputer.jenis, komputer.kondisi, ruangan.id AS id_ruangan, ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id WHERE komputer.jenis = 'Barang Pendukung' AND tipe_barang.tipe_barang = ? AND komputer.kondisi = ? AND (ruangan.nama_ruangan LIKE ? OR merk.nama_merk LIKE ?) ORDER BY komputer.id DESC LIMIT ? OFFSET ?`;
+    const getBarangPendukungQuery = `SELECT komputer.id, merk.id AS id_merk, merk.nama_merk, tipe_barang.id AS id_tipe, tipe_barang.tipe_barang, komputer.spek, komputer.jenis, komputer.kondisi, ruangan.id AS id_ruangan, ruangan.nama_ruangan, komputer.urutan_meja, komputer.created_at, komputer.updated_at FROM komputer JOIN merk ON id_merk = merk.id JOIN ruangan ON id_ruangan = ruangan.id JOIN tipe_barang ON id_tipe = tipe_barang.id WHERE komputer.jenis = 'Barang Pendukung' AND komputer.kondisi = ? AND (ruangan.nama_ruangan LIKE ? OR merk.nama_merk LIKE ? OR tipe_barang.tipe_barang LIKE ? OR komputer.spek LIKE ?)`;
 
     db.query(
       getBarangPendukungQuery,
-      [tipe, kondisi, `%${search}%`, `%${search}%`, limit, offset],
+      [tipe, kondisi, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`],
       function (error, rows) {
         if (error) {
           reject(error);

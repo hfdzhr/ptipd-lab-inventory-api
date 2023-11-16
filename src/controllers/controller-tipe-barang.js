@@ -3,14 +3,19 @@ const db = require('../configs/db.config');
 // Menampilkan semua data
 const getDataTipeBarang = async (req, res) => {
   try {
+    const search = req.query.search_query || '';
     const data = await new Promise((resolve, reject) => {
-      db.query('SELECT * FROM tipe_barang', function (error, rows) {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(rows);
+      db.query(
+        'SELECT * FROM tipe_barang WHERE tipe_barang LIKE ?',
+        [`%${search}%`],
+        function (error, rows) {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(rows);
+          }
         }
-      });
+      );
     });
 
     if (data) {
