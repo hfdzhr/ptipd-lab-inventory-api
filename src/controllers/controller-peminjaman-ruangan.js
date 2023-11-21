@@ -1,5 +1,6 @@
 const db = require('../configs/db.config');
 const fs = require('fs');
+const randomstring = require('randomstring');
 // Menampilkan semua data
 const getDataPeminjamanRuangan = async (req, res) => {
   try {
@@ -133,7 +134,7 @@ const addDataPeminjamanRuangan = async (req, res) => {
     let fileName = null;
     if (req.files && req.files.file) {
       const file = req.files.file;
-      fileName = file.name;
+      fileName = `${randomstring.generate(8)}-${file.name}`;
       url = `${req.protocol}://${req.get('host')}/dokumen/${fileName}`;
 
       file.mv(`./public/dokumen/${fileName}`, async (err) => {
@@ -238,7 +239,7 @@ const editDataPeminjamanRuangan = async (req, res) => {
 
     if (req.files && req.files.file) {
       const file = req.files.file;
-      fileName = file.name;
+      fileName = `${randomstring.generate(8)}-${file.name}`;
       url = `${req.protocol}://${req.get('host')}/dokumen/${fileName}`;
 
       const filepath = `./public/dokumen/${ruangan.nama_file}`;

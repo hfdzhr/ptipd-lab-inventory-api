@@ -1,5 +1,6 @@
 const db = require('../configs/db.config');
 const fs = require('fs');
+const randomstring = require('randomstring');
 
 // Menampilkan semua data
 const getDataPeminjamanBarang = async (req, res) => {
@@ -38,13 +39,24 @@ const getDataPeminjamanBarang = async (req, res) => {
     JOIN ruangan r ON
       k.id_ruangan = r.id
     WHERE k.jenis LIKE ? AND (m.nama_merk LIKE ? OR r.nama_ruangan LIKE ? OR k.spek LIKE ? OR k.urutan_meja LIKE ? OR pb.peminjam LIKE ?)`;
-      db.query(queryPeminjamanRuangan, [`%${jenis}%`, `%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`,`%${search}%`], function (error, rows) {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(rows);
+      db.query(
+        queryPeminjamanRuangan,
+        [
+          `%${jenis}%`,
+          `%${search}%`,
+          `%${search}%`,
+          `%${search}%`,
+          `%${search}%`,
+          `%${search}%`,
+        ],
+        function (error, rows) {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(rows);
+          }
         }
-      });
+      );
     });
 
     if (data) {
@@ -173,7 +185,7 @@ const addDataPeminjamanBarang = async (req, res) => {
     let fileName = null;
     if (req.files && req.files.file) {
       const file = req.files.file;
-      fileName = file.name;
+      fileName = `${randomstring.generate(8)}-${file.name}`;
       url = `${req.protocol}://${req.get('host')}/dokumen/${fileName}`;
 
       file.mv(`./public/dokumen/${fileName}`, async (err) => {
@@ -276,7 +288,7 @@ const editDataPeminjamanBarang = async (req, res) => {
 
     if (req.files && req.files.file) {
       const file = req.files.file;
-      fileName = file.name;
+      fileName = `${randomstring.generate(8)}-${file.name}`;
       url = `${req.protocol}://${req.get('host')}/dokumen/${fileName}`;
 
       const filepath = `./public/dokumen/${ruangan.nama_file}`;

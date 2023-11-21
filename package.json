@@ -23,6 +23,7 @@
     "mysql2": "^3.6.2",
     "node-cron": "^3.0.2",
     "nodemailer": "^6.9.5",
+    "randomstring": "^1.3.0",
     "sql-template-strings": "^2.2.2",
     "util": "^0.12.5",
     "validator": "^13.11.0"
