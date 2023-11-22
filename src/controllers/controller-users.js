@@ -374,6 +374,7 @@ const loginDataUser = async (req, res) => {
               email: user[0].email,
               instansi: user[0].instansi,
               role: user[0].role,
+              isVerified: parseInt(user[0].is_verified)
             },
             message: 'Selamat Login Berhasil',
             token,
