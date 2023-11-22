@@ -314,8 +314,6 @@ const editDataPeminjamanBarang = async (req, res) => {
       tgl_peminjaman: req.body.tgl_peminjaman,
       tgl_kembali: req.body.tgl_kembali,
       status_peminjaman: req.body.status_peminjaman,
-      nama_file: fileName,
-      file: url,
     };
 
     const result = await new Promise((resolve, reject) => {

@@ -139,7 +139,7 @@ const addDataPeminjamanRuangan = async (req, res) => {
 
       file.mv(`./public/dokumen/${fileName}`, async (err) => {
         if (err) {
-          throw new Error('Gagal menyimpan file' + err);
+          throw new Error('Gagal menyimpan file' + err  );
         }
       });
     }
@@ -267,8 +267,6 @@ const editDataPeminjamanRuangan = async (req, res) => {
       tanggal_peminjaman: req.body.tanggal_peminjaman,
       tanggal_kembali: req.body.tanggal_kembali,
       status_peminjaman: req.body.status_peminjaman,
-      nama_file: fileName,
-      file: url,
     };
 
     const result = await new Promise((resolve, reject) => {
