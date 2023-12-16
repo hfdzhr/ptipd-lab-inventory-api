@@ -1,16 +1,30 @@
 {
-  "name": "inventory-ptipd-project",
+  "name": "uin-sgd-ptipd-inventory-api",
   "version": "1.0.0",
-  "description": "Project REST API Sederhana",
+  "description": "API backend untuk manajemen inventaris laboratorium PTIPD UIN Sunan Gunung Djati yang menyediakan akses untuk pengelolaan data laboratorium komputer PTIPD",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
     "dev": "npx nodemon app.js"
   },
-  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hfdzhr/ptipd-lab-inventory-api.git"
+  },
+  "keywords": [
+    "api",
+    "inventory",
+    "ptipd",
+    "uinsgd",
+    "express",
+    "backend",
+    "mysql"
+  ],
   "author": "Hafid Al Azhar",
-  "license": "ISC",
+  "license": "UNLICENSED",
+  "config": {
+    "port": "3000"
+  },
   "dependencies": {
     "argon2": "^0.31.2",
     "body-parser": "^1.20.2",
@@ -30,5 +44,6 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  }
+  },
+  "private": true
 }
